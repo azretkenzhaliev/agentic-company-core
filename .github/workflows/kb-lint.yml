@@ -1,0 +1,24 @@
+name: kb-lint
+
+on:
+  push:
+    paths: ["knowledge/**", "scripts/**", ".github/workflows/kb-lint.yml"]
+  pull_request:
+    paths: ["knowledge/**", "scripts/**", ".github/workflows/kb-lint.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests for the KB tooling
+        run: python -m unittest discover -s scripts/tests -v
+      - name: Lint the knowledge base
+        run: python scripts/kb_lint.py

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(git push *--force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * -f*)",
+      "Bash(git push * +*)",
+      "Bash(git -C * push *--force*)",
+      "Bash(git -C * push -f*)",
+      "Bash(git -C * push * -f*)",
+      "Bash(git -C * push * +*)",
+      "Bash(gh pr merge *--admin*)",
+      "Bash(gh pr merge *--auto*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Read(!.env.sample)",
+      "Read(!.env.template)",
+      "Read(*.pem)",
+      "Read(*.key)",
+      "Read(*.p12)",
+      "Read(*.pfx)",
+      "Read(id_rsa*)",
+      "Read(id_ecdsa*)",
+      "Read(id_ed25519*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gh/**)",
+      "Bash(gemini *)"
+    ],
+    "allow": [
+      "Bash(python3 scripts/kb_lint.py *)",
+      "Bash(python3 -m unittest *)",
+      "Bash(git status *)",
+      "Bash(git branch *)",
+      "Bash(git rev-parse *)",
+      "Bash(git worktree list *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh repo view *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "Bash(npm test *)",
+      "Bash(npm run test *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run typecheck *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm run test *)",
+      "Bash(yarn test *)",
+      "Bash(pytest *)",
+      "Bash(python3 -m pytest *)",
+      "Bash(bun run test *)",
+      "Bash(bun run lint *)",
+      "Bash(bun run e2e *)",
+      "Bash(bunx tsc --noEmit *)",
+      "Bash(npm run check *)",
+      "Bash(npx eslint *)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(python3 scripts/second_opinion.py *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_kb_write.py",
+            "args": [],
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_agent_spawn.py",
+            "args": [],
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/approve_git_reads.py",
+            "args": [],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

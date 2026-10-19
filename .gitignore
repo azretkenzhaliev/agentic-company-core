@@ -1,0 +1,13 @@
+# Product repos are cloned here; they have their own git history.
+workspaces/
+
+# Personal Claude Code settings (e.g. "agent": "ceo").
+.claude/settings.local.json
+
+# Local tooling scratch.
+.superpowers/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
