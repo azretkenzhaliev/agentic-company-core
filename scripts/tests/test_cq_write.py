@@ -370,7 +370,7 @@ ALLOWED = [
     f"diff {F} /tmp/cq-backup.md",
     f"# sed -i '' s/a/b/ {F}\necho done",
     # scratch copies at an absolute path outside the repo's workspaces/ (a test's) are free
-    "printf 'x' > /private/tmp/s/kb3/workspaces/demo/content/ceo-questions.md",
+    *(["printf 'x' > /private/tmp/s/kb3/workspaces/demo/content/ceo-questions.md"] if sys.platform == "darwin" else []),
     "S=/tmp/s; sed -i '' 's/a/b/' $S/ceo-questions.md",
     "S=/tmp/s; F=$S/ceo-questions.md; python3 - \"$F\" <<'EOF'\nimport sys\nopen(sys.argv[1], 'w')\nEOF",
     "python3 -c \"open('/tmp/x/ceo-questions.md', 'w')\"",

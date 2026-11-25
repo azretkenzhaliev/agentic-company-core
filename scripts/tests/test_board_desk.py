@@ -1710,7 +1710,7 @@ class Install(Checkout):
         super().setUp()
         for name, value in (("PLIST", self.root / "LaunchAgents" / f"{desk.LABEL}.plist"), ("LOG", self.root / "Logs" / "x.log"),
                             ("READ_PLIST", self.root / "LaunchAgents" / f"{desk.READ_LABEL}.plist"), ("REPO", self.root),
-                            ("JOB_ENV", self.ENV)):
+                            ("JOB_ENV", self.ENV), ("macos", lambda command: True)):
             patcher = mock.patch.object(desk, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)

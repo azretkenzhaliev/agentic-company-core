@@ -95,7 +95,7 @@ class Answers(unittest.TestCase):
         for rel in (".git", "knowledge/board/answers", "knowledge/company", "workspaces/board-desk", "scripts"):
             (repo / rel).mkdir(parents=True)
         cases = {"rm -r knowledge/board": "`rm`", "rm -rf knowledge": "`rm`", "rm -rf workspaces/": "`rm`",
-                 "mv knowledge/board /tmp/x": "`mv`", f"rm -rf {repo}/Knowledge/Board": "`rm`",
+                 "mv knowledge/board /tmp/x": "`mv`",
                  "cd knowledge && rm -rf board": "`rm`", "git checkout -- knowledge/board": "`git checkout`",
                  "git stash -u": "`git stash`", "git stash": "`git stash`", "git stash push -m wip": "`git stash`",
                  "cd scripts && git stash -u": "`git stash`", f"cd /tmp && git -C {repo} stash -u": "`git stash`",
@@ -103,6 +103,8 @@ class Answers(unittest.TestCase):
                  "git checkout -f main": "`git checkout`", "git checkout -- .": "`git checkout`",
                  "git restore .": "`git restore`", "git restore -s HEAD~1 .": "`git restore`",
                  "git switch --discard-changes main": "`git switch`"}
+        if (repo / "Knowledge").exists():  # a case-insensitive disk; on another it is another folder
+            cases[f"rm -rf {repo}/Knowledge/Board"] = "`rm`"
         for command, why in cases.items():
             with self.subTest(command=command):
                 found = reason(command, str(repo))

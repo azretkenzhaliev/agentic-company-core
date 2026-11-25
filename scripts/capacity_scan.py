@@ -703,7 +703,7 @@ def agents(root, now, unread=None):
     the list unread, if given, as (agent id, role, the first order it counts under or None)."""
     orders = {}
     found = []
-    for meta in root.glob("*/subagents/agent-*.meta.json"):
+    for meta in sorted(root.glob("*/subagents/agent-*.meta.json")):
         agent_id = meta.name[len("agent-"):-len(".meta.json")]
         log = meta.with_name(f"agent-{agent_id}.jsonl")
         try:
@@ -1096,7 +1096,7 @@ def stalled(directives_dir, root, now, open_ids):
             metas[(folder, agent_id)] = (info if isinstance(info, dict) else None, at)
         return metas[(folder, agent_id)]
 
-    for path in root.glob("*/subagents/agent-*.meta.json"):
+    for path in sorted(root.glob("*/subagents/agent-*.meta.json")):
         agent_id = path.name[len("agent-"):-len(".meta.json")]
         try:
             if now - path.with_name(f"agent-{agent_id}.jsonl").stat().st_mtime > ENDED_FOR:
@@ -1607,7 +1607,8 @@ def email_due(knowledge, now, log=None):
     if EMAIL_FROM is None or now < EMAIL_FROM:
         return []
     current = {}
-    for page in [*knowledge.glob("company/board-desk/*.md"), *knowledge.glob("board/directives/*.md")]:
+    for page in sorted([*knowledge.glob("company/board-desk/*.md"), *knowledge.glob("board/directives/*.md")],
+                       key=lambda page: page.stem):  # asks.md before its archives
         rel = page.relative_to(knowledge).as_posix()
         if DESK_PAGES.fullmatch(rel) or DIRECTIVE_PAGE.fullmatch(rel):
             current[rel] = page.read_text(encoding="utf-8", errors="replace")
