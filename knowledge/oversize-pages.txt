@@ -1,0 +1,5 @@
+# Pages over their size limit, which scripts/kb_lint.py lets pass, one path under knowledge/ on each line. The CEO
+# removes a line as its page is slimmed; the linter warns when a line no longer applies. A page isn't added here to
+# pass the linter: move its history to a sibling page with status: archived. One ships here: the engineering README
+# is rules, no history, and agent files cite its sections by number.
+engineering/README.md

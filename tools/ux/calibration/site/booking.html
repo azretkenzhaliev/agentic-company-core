@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Резервация на билети – Градски театър</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; background: #f6f7f9; }
+  header, main { padding: 16px 20px; }
+  header { background: #fff; border-bottom: 1px solid #ddd; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .warning { margin: 0; font-weight: 700; text-transform: uppercase; color: #8a1c1c; }
+  .timer { margin: 8px 0 0; font-size: 18px; }
+  .sheet { width: 520px; margin: 0 auto; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+  .name-row { margin-bottom: 20px; }
+  .name-row span { display: block; margin-bottom: 4px; font-weight: 600; }
+  .name-row input { font: inherit; width: 100%; padding: 8px 10px; border: 1px solid #767676; border-radius: 6px; }
+  fieldset { margin: 0 0 20px; padding: 12px 16px; border: 1px solid #ccc; border-radius: 8px; }
+  fieldset.missing { border: 2px solid #d32f2f; }
+  legend { font-weight: 600; padding: 0 4px; }
+  .opt { margin: 8px 0; padding: 10px 14px; border: 1px solid #767676; border-radius: 6px; background: #fff; cursor: pointer; }
+  .opt.picked { background: #1f4fa3; border-color: #1f4fa3; color: #fff; }
+  .radio { display: block; margin: 8px 0; }
+  .note { margin: 0 0 16px; font-weight: 700; }
+  .submit { font: inherit; font-weight: 600; padding: 10px 24px; border: 0; border-radius: 6px; background: #1f4fa3; color: #fff; cursor: pointer; }
+  #result { margin: 16px 0 0; font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="booking-title">Tеатър: резервация на билети</h1>
+  <p class="warning">Внимание: местата се пазят 20 минути</p>
+  <p class="timer">Оставащо време: <span id="clock">20:00</span></p>
+</header>
+<main>
+  <form id="booking-form" class="sheet" novalidate>
+    <div class="name-row">
+      <span>Име и фамилия</span>
+      <input id="guest-name" type="text" autocomplete="name">
+    </div>
+    <p class="note">ВАЖНО: изберете само един вариант във всяка група.</p>
+    <fieldset id="seats">
+      <legend>Места. В коя част на залата?</legend>
+      <div class="opt" onclick="pick(this)">Партер</div>
+      <div class="opt" onclick="pick(this)">Балкон</div>
+      <div class="opt" onclick="pick(this)">Ложа</div>
+    </fieldset>
+    <fieldset id="pickup">
+      <legend>Билети. Как ще ги получите?</legend>
+      <label class="radio"><input type="radio" name="pickup" value="email"> По имейл</label>
+      <label class="radio"><input type="radio" name="pickup" value="desk"> На касата</label>
+      <label class="radio"><input type="radio" name="pickup" value="post"> По пощата</label>
+    </fieldset>
+    <button class="submit" type="submit">Резервирай</button>
+    <p id="result" role="status"></p>
+  </form>
+</main>
+<script>
+  const form = document.getElementById('booking-form');
+  function pick(el) {
+    for (const o of el.parentElement.querySelectorAll('.opt')) o.classList.toggle('picked', o === el);
+  }
+  function answered(fs) {
+    return fs.querySelector('.opt.picked, input:checked') !== null;
+  }
+  function finish(text) {
+    for (const el of form.querySelectorAll('input, button')) el.disabled = true;
+    for (const el of form.querySelectorAll('.opt')) el.onclick = null;
+    document.getElementById('result').textContent = text;
+  }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let ok = true;
+    for (const fs of form.querySelectorAll('fieldset')) {
+      fs.classList.toggle('missing', !answered(fs));
+      ok = ok && answered(fs);
+    }
+    if (ok) finish('Резервацията ви е приета.');
+  });
+  let left = 20 * 60;
+  const clock = document.getElementById('clock');
+  const timer = setInterval(() => {
+    left -= 1;
+    clock.textContent = `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`;
+    if (left <= 0) {
+      clearInterval(timer);
+      finish('Времето изтече. Резервацията ви е изпратена.');
+    }
+  }, 1000);
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 ---
 name: onboard-codebase
-description: Use when a product's repo must be cloned or refreshed into workspaces/ and its architecture page and deploy runbook written or updated, such as before the first engineering order on a product, or after large changes. Takes the product id, as listed in CLAUDE.md's product table.
+description: Use when a product's repo must be cloned or refreshed into workspaces/ and its architecture page and deploy runbook written or updated, such as before the first engineering order on a product, or after large changes. Takes the product id (its folder under knowledge/products/).
 argument-hint: <product-id>
 arguments: [product]
 context: fork
@@ -27,7 +27,7 @@ Read `knowledge/products/$product/README.md`. The "Repo" row gives `<owner>/<rep
 
 1. **Orientation:** `README*`, `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING*`, `docs/`.
 2. **Stack:** manifests and lockfiles (`package.json`, `pnpm-lock.yaml`, `pyproject.toml`, `requirements*.txt`, `go.mod`, `Gemfile`, `composer.json`, …) and framework configs.
-3. **Configuration:** `.env.example` or `.env.sample`, to learn variable *names*. **Never open `.env` or key files.**
+3. **Configuration:** `.env.example` or `.env.sample`, to learn variable *names*. Open `.env` or key files only if the task needs a value (`CLAUDE.md`, "Git, code and safety").
 4. **Build, CI and deploy:** `.github/workflows/*`, `Dockerfile`, `docker-compose*`, `vercel.json`, `netlify.toml`, `fly.toml`, `render.yaml`, `Procfile`, `app.yaml`, `wrangler.toml`, `serverless.yml`, infrastructure-as-code folders.
 5. **Data:** migrations, schema files, ORM models, seed scripts.
 6. **Features and flows:** routes, pages, API handlers, background jobs, auth, i18n and locale files.

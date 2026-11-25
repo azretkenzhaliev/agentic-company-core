@@ -2,7 +2,7 @@
 title: Definition of done
 owner: cto
 status: active
-updated: 2026-10-14
+updated: 2026-11-25
 related: [README.md, review-checklist.md, ../README.md]
 ---
 
@@ -11,18 +11,18 @@ related: [README.md, review-checklist.md, ../README.md]
 ## A task (Senior)
 
 - Every acceptance criterion is met, with a test for each behavior change.
-- The task suite passes (the runbook's "Task suite", or the full suite where the runbook has none), with the exact commands and results in the report.
+- The task suite passes (the runbook's "Task suite", or the tests the diff touches where the runbook has none), with the exact commands and results in the report.
 - Linters and formatters pass on the change.
 - Committed on the workstream branch with ids in the message.
-- Code review verdict: APPROVED.
+- Code review finished: APPROVED, in the round or at the re-check of its fixes (every blocker and major fixed). Minors and nits are logged, not fixed.
 
 ## A workstream (Staff)
 
-- The Board approved the design gist before implementation started (unless the directive waived sign-off).
-- Every task is done and APPROVED, and round-3 follow-ups are carried into a later task or listed.
-- The full suite is green on the landing branch before the landing.
+- The design was signed off before implementation started: by the CEO (two-way) or the Board (one-way), unless the Board waived sign-off (engineering README, section 3).
+- Every task is done, and logged minors and follow-ups are carried into a later task or listed.
+- Typecheck, lint, the task suite and the runbook's essential tier (where it has one) are green on the landing branch after merging `origin/main`; zero tests selected for a code change fails the gate (README §5). A production deploy needs the affected tests, the essential tier and the PR's CI checks green; never a full suite (SA-001 condition 2).
 - The design doc's review and implementation logs are complete, and its status is updated.
-- One PR, with green CI checks if the repo has CI.
+- One PR, with the required checks green if the repo has them.
 - Merged and deployed per the runbook with the smoke check passing, or reported as blocked on a named gate.
 
 ## A directive (CEO)

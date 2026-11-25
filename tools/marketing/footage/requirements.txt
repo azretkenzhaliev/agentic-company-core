@@ -1,0 +1,5 @@
+# yt-dlp for tools/marketing/footage/fetch.py, pinned with its hash. Installed only in footage/.venv (gitignored):
+#   python3 -m venv tools/marketing/footage/.venv
+#   tools/marketing/footage/.venv/bin/pip install --require-hashes -r tools/marketing/footage/requirements.txt
+# It has no dependencies. Upgrade by hand: a newer version and its hash from PyPI, then the tests.
+yt-dlp==2026.10.26 --hash=sha256:a05c5b5d8562f7e8a62f5334348b406af4930d56d3a65f8021d14af0e22339ae

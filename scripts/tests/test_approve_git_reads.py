@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 HOOK = Path(__file__).resolve().parents[1] / "hooks" / "approve_git_reads.py"
-WT = "workspaces/my-product/.worktrees/RM-001-WS-1"
+WT = "workspaces/demo/.worktrees/RM-101-WS-1"
 
 
 class ApproveGitReads(unittest.TestCase):
@@ -44,9 +44,9 @@ class ApproveGitReads(unittest.TestCase):
             f"git -C {WT} show --stat HEAD~1",
             f"git -C {WT} branch --show-current",
             f"git -C {WT} rev-parse HEAD",
-            "git -C workspaces/my-product/my-repo fetch origin",
-            "git -C workspaces/my-product/my-repo worktree list",
-            "git -C /Users/me/agentic-company/workspaces/other-product/other-repo log -5 --format=%h",
+            "git -C workspaces/demo/demo-app fetch origin",
+            "git -C workspaces/demo/demo-app worktree list",
+            "git -C /home/me/agentic-company/workspaces/acme/acme-app log -5 --format=%h",
             f"  git -C {WT} status  ",
             "git fetch origin",
             "git fetch origin main:refs/remotes/origin/main --prune",

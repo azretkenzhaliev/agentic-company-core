@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-page="__PAGE__" data-session="__SESSION__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' file:; media-src 'self' file:; font-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>__TITLE__</title>
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<header class="top">
+  <p class="where"><b id="part"></b> <span id="count"></span></p>
+  <p class="clock" id="clock"></p>
+  <button id="back" type="button">Back</button>
+  <button id="menu" type="button">Parts</button>
+</header>
+<main id="screen">
+  <h1>__TITLE__</h1>
+  <noscript><p class="warn">This viewer doesn't run the page's scripts, so nothing here works. Open the file in Chrome on your computer or in your phone's browser; your answers stay on the device where you start.</p></noscript>
+</main>
+<footer class="bar">
+  <textarea id="out" readonly aria-label="All your answers as text"></textarea>
+  <div class="row">
+    <p class="state"><b id="done">0</b> of <b id="total">0</b> answered. <span id="saved"></span></p>
+    <button id="save" type="button">Save answers</button>
+    <button id="copy" type="button">Copy</button>
+  </div>
+</footer>
+<dialog id="parts"><div class="list"></div><button type="button" class="close">Close</button></dialog>
+<dialog id="zoom"><img alt="Enlarged image"></dialog>
+<script type="application/json" id="design">__DESIGN__</script>
+<script>
+/*JS*/
+</script>
+</body>
+</html>

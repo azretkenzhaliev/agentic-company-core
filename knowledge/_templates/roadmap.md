@@ -45,5 +45,7 @@ related: []
 
 ## Change log
 
+One row per workstream change, no per-step rows.
+
 | Date | Change | Why |
 |---|---|---|

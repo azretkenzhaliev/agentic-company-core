@@ -26,4 +26,5 @@ One folder per product, created when work on it starts:
 ## Rules
 
 - **No outreach, offers, discounts, contracts or price changes leave the company without the Board.**
+- **Prep for the Board's own conversations:** a touchy topic gets how to raise it, not advice to leave it out.
 - No personal data about individual leads in the KB unless the Board approves a lawful basis and a place for it. TODO(board): CRM of record, if any.

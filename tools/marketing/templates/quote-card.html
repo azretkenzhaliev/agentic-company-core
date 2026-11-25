@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- Quote card, 1080x1350. The quoted text is what the Board provided, as it provided it, or copied from a cited source
+     (content-qa E), never written by a model. Plain or abstract background. -->
+<html lang="en"><head><meta charset="utf-8">
+<style>
+  :root { --bg: #ffffff; --fg: #1a1a1a; --accent: #1a1a1a; --muted: #666666; }
+  body { width: 1080px; height: 1350px; box-sizing: border-box; padding: 120px 104px; display: flex; flex-direction: column; justify-content: center; }
+  .quote { font: 400 52px/1.4 'Golos Text', sans-serif; }
+  .quote::before { content: '\201C'; color: var(--accent); }
+  .quote::after { content: '\201D'; color: var(--accent); }
+  .ref { margin-top: 56px; font: 600 30px 'Golos Text', sans-serif; color: var(--muted); }
+  .ref span { display: block; margin-top: 10px; font-weight: 400; }
+</style></head>
+<body>
+  <div class="quote">TEST — the exact text goes here</div>
+  <div class="ref">Author, work, page<span>Translation: name</span></div>
+</body></html>

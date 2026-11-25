@@ -1,119 +1,60 @@
 # Optional integrations
 
-The core runs with nothing but Claude Code, `gh` and Python. These four integrations come from running this setup on real products. Each one is off, or does nothing, until you switch it on.
+The core runs with nothing but Claude Code, `gh` and Python. Everything below is off, or does nothing, until you give it its key, account, address or entry. What agents may then do with it is in the guide, ["What is on by default"](guide.md#what-is-on-by-default). An integration's settings are an entry under `"integrations"` in `company.json` (name, then its settings); a script or hook reads them through `scripts/company_config.py`. Off means refuse, never open: a limit that holds every caller (email, social posting, Telegram, Notion, the database, background runs, question files, your answers) is always on, whatever is configured, and a missing setting refuses what would leave the company or write a database. Only a limit on a role follows that role's department. `company.json` is a guardrail file: no subagent writes it, and a hook asks you before the CEO's session does.
 
 | Integration | What it gives you | Default |
 |---|---|---|
-| [Second opinions from other model families](#1-second-opinions-from-other-model-families-sa-003) | Gemini, GPT and DeepSeek review every design and diff next to Claude | Off until you set the API keys |
-| [Claude in Chrome for the CEO](#2-claude-in-chrome-for-the-ceo) | The CEO can look at web pages in your browser | Listed in the CEO's tools; works only when you start it with `--chrome` |
-| [Neon (Postgres) connector, with a SQL guard](#3-neon-postgres-connector-with-a-sql-guard) | Engineering agents read your production database and make backup branches, with dangerous SQL blocked and every statement logged | Not installed |
-| [Vercel CLI guard](#4-vercel-cli-guard) | Agents can't deploy from the CLI; products deploy only through Git | Not installed |
+| [Second opinions from other model families](#1-second-opinions-from-other-model-families-sa-003) | Another model family reviews designs, diffs and the CEO's plans next to Claude | In force (SA-003) once you set an API key and agree to the entry in `company.json`; a key by itself sends nothing |
+| [Email to the Board](#2-email-to-the-board) | The CEO emails you when you are away: each ask, quoted, and each answer | Off until `board_email` is set; then no daily cap |
+| [The Board desk](board-desk.md) | Asks, questions, progress and daily summaries you read and answer in Notion, on the phone | Off; read its "What it sends out" first. Without it, the same asks and answers live in the KB pages and the chat |
+| [Claude in Chrome for the CEO](#3-claude-in-chrome-for-the-ceo) | The CEO can look at web pages in your browser | Listed in the CEO's tools; works only when you start it with `--chrome` |
+| [Your mail and Telegram channels for the analyst](#4-your-mail-and-telegram-channels-for-the-analyst) | The analyst reads your inbox, or the channels you list, read only, when an order says so | Off until you add the tools to `analyst.md` |
+| [Neon (Postgres), with a SQL guard](guards.md) | Engineering agents read your database, run SQL on it and make backup branches, with dangerous SQL blocked and every statement logged | The guard is always on, and no SQL runs until you connect Neon and add its entry; what agents may do there is yours to say, customers' data by name (SA-006). Then SQL runs without a prompt, and on production a bulk change (all rows without a condition, emptying a table, dropping a table or column) passes only after a fresh backup |
+| [Vercel CLI guard](guards.md) | Agents can't deploy from the CLI; products deploy only through Git | The guard is always on. Rollbacks, alias writes and rolling releases are refused until `company.json` has a `"vercel"` entry, and then for the teams its `"git_only_scopes"` lists ([guards.md](guards.md), "Settings") |
+| [Merge queue and full-suite guards](guards.md) | For a product with a GitHub merge queue, or a test suite too heavy to run twice at once | Off until a product is listed |
+| [Marketing department](marketing.md) | A CMO and five agents plan and make content for your accounts; you approve every post | Off |
+| [macOS upkeep](#5-macos-upkeep) | Battery emails | macOS only; off |
+
+Everything that sends data to a new outside party, costs money or signs up for a service is the Board's decision (b1, b2 in [`CLAUDE.md`](../CLAUDE.md)): you give each integration its key, account, address or entry yourself. Giving it is never recorded as your words, and never grants a template of [standing-authorizations.md](../knowledge/board/standing-authorizations.md) (SA-005 to SA-007): that takes your own words, recorded there.
 
 ## 1. Second opinions from other model families (SA-003)
 
-Both reviewers (`design-reviewer`, `code-reviewer`) run `scripts/second_opinion.py`, which sends the material under review to other model families. Models tend to favour their own output, so a second family catches what Claude misses. A blocker or major from a second opinion counts unless the Claude reviewer refutes it with `file:line` evidence.
+The reviewers (`design-reviewer`, `code-reviewer`) and the critic run `scripts/second_opinion.py`, which sends the material under review to other model families. Models tend to favour their own output, so a second family catches what Claude misses. A blocker or major from a second opinion counts unless the Claude reviewer refutes it with `file:line` evidence.
 
-1. Create API keys and export them in your shell profile (`~/.zshrc`), never in this repo:
-   - `GEMINI_API_KEY` from Google AI Studio, with billing enabled there (the free tier's quota for the larger models is tiny);
-   - `OPENAI_API_KEY`;
-   - `DEEPSEEK_API_KEY` (optional: it takes Gemini's slot when Gemini is off or out of quota).
-2. Check it: `python3 scripts/second_opinion.py --kind code --brief check --file README.md`.
-3. Confirm [SA-003](../knowledge/board/standing-authorizations.md) with your Board: the providers may train on what is sent. The script screens credential values out of every packet anyway.
+1. Create API keys and export them in your shell profile, never in this repo:
+   - `OPENAI_API_KEY` (code and design reviews, and the critic's checks);
+   - `GEMINI_API_KEY` from Google AI Studio, with billing enabled there (the critic's checks; the free tier's quota for the larger models is tiny).
+2. Agree to the entry in `company.json` that `/onboard-company` proposes for the keys you set: `"second_opinion": {"providers": ["openai", "google"]}` under `"integrations"`. `"google"` is Google Gemini, key `GEMINI_API_KEY`; `"gemini"` would start nothing. Without the entry a key sends nothing, so one you exported for another tool is safe.
+3. Check it: `python3 scripts/second_opinion.py --kind code --brief check --file README.md` (OpenAI), and the same with `--kind plan` (both).
+4. Decide about training and money. [SA-003](../knowledge/board/standing-authorizations.md) is in force by default, so with a key and the entry set, agents send packets (code, diffs, designs, plans, KB pages), the providers may train on them, as your account's settings there say, and the only limit is the money in that account. For the stricter choice, set each account so that it doesn't train (packets are still sent), take a provider out of the entry, unset a key, or tell the CEO a monthly cap, or to narrow or end SA-003. The script screens credential values out of every packet anyway, and agents leave customer data out.
 
-The default models are in the `choose_*` functions in the script. It confirms each model is on the key's model list and never guesses ids. Every call is logged to `workspaces/second-opinions/calls.jsonl` (gitignored) with its token counts, so spend can be counted, and every answer is saved to `workspaces/second-opinions/answers/<call id>.txt`, so a review stopped after its paid calls can reuse them. Without keys, reviews run single-family and say so.
+The script's docstring has the models, how to pin others with `SECOND_OPINION_*_MODEL`, the effort and service-tier settings, and where each call and answer is logged (under `workspaces/`, gitignored, with token counts, so spend can be counted). It never guesses model ids. Without keys or the entry, the slots print as off or unavailable, reviews run single-family and say so.
 
-## 2. Claude in Chrome for the CEO
+## 2. Email to the Board
+
+1. Connect the Gmail connector in Claude (claude.ai settings, or `claude mcp`), and check that it shows in `claude mcp list`. The CEO's tool list names its send tool, `mcp__claude_ai_Gmail__send_message`, and no other Gmail tool; on another connector name, change that line and `scripts/hooks/board_email.py`'s. Connecting it makes your mailbox reachable from every Claude session on this account, inside this repo and outside it; here no agent's tool list names another Gmail tool.
+2. Set `"board_email"` in `company.json` to your address. It is the only address the CEO may email; the hook refuses every other recipient, cc, bcc, reply and forward, and everything while it is empty. With it, add `"board_email_events": {"from": "<now, UTC>"}` under `"integrations"` (the time as `date -u +%Y-%m-%dT%H:%M:%SZ` prints it): from then on the capacity scan reminds the CEO of an event's email that didn't go out. Leave it out to switch that off.
+3. Tell the CEO how often (`ceo.md`, "Email the Board", has the defaults: no daily cap; [docs/guards.md](guards.md) has the setting for one). Each email quotes the ask or answer it is about, never a secret and never customer data.
+
+## 3. Claude in Chrome for the CEO
 
 The CEO's tool list includes `mcp__claude-in-chrome__*`, so with the [Claude in Chrome](https://claude.com/chrome) extension installed the CEO can open and read pages in your browser, for example to check what a competitor's sign-up page shows.
 
-- Start the CEO with `claude --agent ceo --chrome`.
+- Start the CEO with `claude --chrome`. Not in WSL: Claude Code's [Chrome integration](https://code.claude.com/docs/en/chrome) isn't supported there.
 - The browser is yours, with your signed-in accounts. `CLAUDE.md` forbids sending anything outside the company without the Board, but nothing in the tool list enforces "look only". Tell the CEO in the directive what it may do in the browser.
 - To remove it, delete `mcp__claude-in-chrome__*` from the `tools:` line in `.claude/agents/executive/ceo.md`.
 
-## 3. Neon (Postgres) connector, with a SQL guard
+## 4. Your mail and Telegram channels for the analyst
 
-With the claude.ai Neon connector, engineering agents can inspect your database, make a backup branch before a migration, and run checked SQL. The setup below gives each role only what it needs, denies the destructive tools to every session, and runs a hook that blocks dangerous SQL and logs every statement.
+Off: the analyst's tool list has neither. It is your decision (b4: it opens your inbox to an agent), recorded as a Decided row with your words; the platform engineer adds the tools through the gate.
 
-1. **Connect** the Neon connector in Claude, and check that it shows in `claude mcp list`.
-2. **Give the roles their tools.** Append to the `tools:` line of:
-   - `.claude/agents/engineering/cto.md`: all 22 tools in the allow list below;
-   - `.claude/agents/engineering/staff-engineer.md`: the same, except `mcp__claude_ai_Neon__run_sql_transaction`;
-   - `.claude/agents/engineering/senior-engineer.md`: the first 10 (read-only) tools.
-3. **Add the permission rules** to `.claude/settings.json`: the allow list to `permissions.allow`, the deny list to `permissions.deny`.
+1. **Mail:** with the Gmail connector connected, add `mcp__claude_ai_Gmail__search_threads`, `mcp__claude_ai_Gmail__get_thread`, `mcp__claude_ai_Gmail__get_message` and `mcp__claude_ai_Gmail__list_labels` to the `tools:` line in `.claude/agents/executive/analyst.md`. It reads only when the CEO's order says so (`analyst.md`, "The Board's mail"). Mail is untrusted: only the facts the question needs go into its note, and never a third person's details.
+2. **Telegram channels** (for marketing's idea note): with a Telegram MCP server named `telegram`, add `mcp__telegram__list_messages`. A hook allows only the channels in `knowledge/marketing/idea-sources.md`.
 
-   <details><summary>Allow list (22 tools)</summary>
+To remove either, delete its tools from that line.
 
-   ```json
-   "mcp__claude_ai_Neon__list_projects", "mcp__claude_ai_Neon__describe_project", "mcp__claude_ai_Neon__list_branches",
-   "mcp__claude_ai_Neon__get_branch", "mcp__claude_ai_Neon__get_default_branch", "mcp__claude_ai_Neon__describe_branch",
-   "mcp__claude_ai_Neon__list_postgres_databases", "mcp__claude_ai_Neon__get_database_tables",
-   "mcp__claude_ai_Neon__describe_table_schema", "mcp__claude_ai_Neon__compare_database_schema",
-   "mcp__claude_ai_Neon__list_organizations", "mcp__claude_ai_Neon__list_postgres_roles", "mcp__claude_ai_Neon__list_snapshots",
-   "mcp__claude_ai_Neon__get_snapshot_schedule", "mcp__claude_ai_Neon__list_operations", "mcp__claude_ai_Neon__get_operation",
-   "mcp__claude_ai_Neon__inspect_database", "mcp__claude_ai_Neon__list_docs_resources", "mcp__claude_ai_Neon__get_doc_resource",
-   "mcp__claude_ai_Neon__create_branch", "mcp__claude_ai_Neon__run_sql", "mcp__claude_ai_Neon__run_sql_transaction"
-   ```
-   </details>
+## 5. macOS upkeep
 
-   <details><summary>Deny list (61 tools: deleting, resetting, credentials, auth, functions, storage)</summary>
+A script whose docstring says what it does and what to install; cloning the repo doesn't install it, and it does nothing on another system:
 
-   ```json
-   "mcp__claude_ai_Neon__delete_project", "mcp__claude_ai_Neon__create_project", "mcp__claude_ai_Neon__update_project",
-   "mcp__claude_ai_Neon__recover_project", "mcp__claude_ai_Neon__delete_branch", "mcp__claude_ai_Neon__reset_from_parent",
-   "mcp__claude_ai_Neon__update_branch", "mcp__claude_ai_Neon__set_default_branch", "mcp__claude_ai_Neon__restore_snapshot",
-   "mcp__claude_ai_Neon__finalize_branch_restore", "mcp__claude_ai_Neon__delete_snapshot", "mcp__claude_ai_Neon__update_snapshot",
-   "mcp__claude_ai_Neon__set_snapshot_schedule", "mcp__claude_ai_Neon__get_connection_string",
-   "mcp__claude_ai_Neon__reset_postgres_role_password", "mcp__claude_ai_Neon__create_credential",
-   "mcp__claude_ai_Neon__rotate_credential", "mcp__claude_ai_Neon__revoke_credential", "mcp__claude_ai_Neon__create_postgres_role",
-   "mcp__claude_ai_Neon__delete_postgres_role", "mcp__claude_ai_Neon__create_postgres_database",
-   "mcp__claude_ai_Neon__update_postgres_database", "mcp__claude_ai_Neon__delete_postgres_database",
-   "mcp__claude_ai_Neon__prepare_database_migration", "mcp__claude_ai_Neon__complete_database_migration",
-   "mcp__claude_ai_Neon__prepare_query_tuning", "mcp__claude_ai_Neon__complete_query_tuning",
-   "mcp__claude_ai_Neon__create_postgres_endpoint", "mcp__claude_ai_Neon__update_postgres_endpoint",
-   "mcp__claude_ai_Neon__delete_postgres_endpoint", "mcp__claude_ai_Neon__start_postgres_endpoint",
-   "mcp__claude_ai_Neon__suspend_postgres_endpoint", "mcp__claude_ai_Neon__restart_postgres_endpoint",
-   "mcp__claude_ai_Neon__provision_neon_auth", "mcp__claude_ai_Neon__disable_auth", "mcp__claude_ai_Neon__update_auth_config",
-   "mcp__claude_ai_Neon__add_auth_oauth_provider", "mcp__claude_ai_Neon__update_auth_oauth_provider",
-   "mcp__claude_ai_Neon__delete_auth_oauth_provider", "mcp__claude_ai_Neon__add_auth_trusted_domain",
-   "mcp__claude_ai_Neon__delete_auth_trusted_domain", "mcp__claude_ai_Neon__create_auth_user",
-   "mcp__claude_ai_Neon__delete_auth_user", "mcp__claude_ai_Neon__update_auth_user_role",
-   "mcp__claude_ai_Neon__provision_neon_data_api", "mcp__claude_ai_Neon__update_data_api", "mcp__claude_ai_Neon__delete_data_api",
-   "mcp__claude_ai_Neon__deploy_function", "mcp__claude_ai_Neon__update_function", "mcp__claude_ai_Neon__delete_function",
-   "mcp__claude_ai_Neon__create_trigger", "mcp__claude_ai_Neon__update_trigger", "mcp__claude_ai_Neon__delete_trigger",
-   "mcp__claude_ai_Neon__register_functions_custom_domain", "mcp__claude_ai_Neon__delete_functions_custom_domain",
-   "mcp__claude_ai_Neon__create_storage_bucket", "mcp__claude_ai_Neon__delete_storage_bucket",
-   "mcp__claude_ai_Neon__delete_storage_object", "mcp__claude_ai_Neon__delete_storage_objects_by_prefix",
-   "mcp__claude_ai_Neon__presign_storage_object", "mcp__claude_ai_Neon__send_feedback"
-   ```
-   </details>
-
-   Deny rules apply to every session in the repo, including your own maintenance sessions.
-4. **Switch on the SQL guard:** add this to `hooks.PreToolUse` in `.claude/settings.json`:
-
-   ```json
-   {
-     "matcher": "mcp__claude_ai_Neon__run_sql|mcp__claude_ai_Neon__run_sql_transaction",
-     "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_neon_sql.py", "args": [], "timeout": 10}]
-   }
-   ```
-
-   It blocks `DROP`, `TRUNCATE`, role and password changes, `DELETE` or `UPDATE` without `WHERE`, and any statement naming a table in `PROTECTED_TABLES`. Edit that list at the top of the script for your schema; the default is Better Auth's `account`, `session` and `verification` tables. Every statement, blocked or not, is logged to `workspaces/neon-sql-audit.log` (gitignored); if the log can't be written, the call is blocked. It guards against mistakes; it can't parse Postgres, so it isn't a sandbox.
-5. **Write the guardrails into an ADR** for the product (`knowledge/engineering/adr/`), and point to it from the runbook. The engineering prompts already say: a backup before any migration or bulk write; never delete or reset a database, project or branch; read personal-data tables only when the task needs it; never print a connection string; schema changes only through the repo's migrations.
-
-## 4. Vercel CLI guard
-
-`scripts/hooks/guard_vercel_cli.py` stops agents from deploying with the Vercel CLI: `vercel deploy`, `vercel` with no command or with a path, `--prod`, `redeploy`, `link` (which writes a token to `.env.local`) and `promote`. It sees through chains, subshells, `sh -c`, variable assignments and `npx`/`bunx`-style launchers. Plain `claude` sessions aren't limited, so you can still deploy by hand. Reads (`ls`, `inspect`, `env ls`, `api` GETs) and builds stay allowed.
-
-1. Add this to `hooks.PreToolUse` in `.claude/settings.json`:
-
-   ```json
-   {
-     "matcher": "Bash",
-     "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_vercel_cli.py", "args": [], "timeout": 10}]
-   }
-   ```
-
-2. Configure it at the top of the script (all empty by default):
-   - `PROMOTE_SCOPES`: teams whose runbook rolls back with Instant Rollback and then `vercel promote`. Without one, `promote` is always refused.
-   - `GIT_ONLY_SCOPES` and `GIT_ONLY_DIRS`: products whose production and aliases change only through Git. For them, agents also can't run `rollback` (except `rollback status`), alias writes or `rolling-release`. A call targets such a product with its `--scope`, or with no scope from its folder under `workspaces/`.
-3. Run the tests: `python3 -m unittest discover -s scripts/tests`.
+- `scripts/battery_alert.py`: an email when a laptop that runs the company drops to 50, 25, 10, 5 or 2% on battery (needs "Email to the Board").

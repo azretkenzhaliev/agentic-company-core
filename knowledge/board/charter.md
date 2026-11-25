@@ -2,7 +2,7 @@
 title: Board charter
 owner: board
 status: active
-updated: 2026-10-19
+updated: 2026-11-25
 related: [standing-authorizations.md, directives/README.md, ../../CLAUDE.md]
 ---
 
@@ -29,9 +29,10 @@ Standing authorizations pre-approve whole classes of actions so they don't need 
 
 ## How the Board works with the company
 
-- **The Board talks only to the CEO,** in a session started with `claude --agent ceo`. The CEO turns what the Board says into orders for the departments.
+- **The Board talks only to the CEO,** in a session started with `claude` in this repo. The CEO turns what the Board says into orders for the departments.
 - **Directives.** Anything the Board asks for is a directive. The CEO files it as `directives/D-YYYYMMDD-<slug>.md` with the Board's words verbatim, then adds the plan, the orders, a status log and the final report. Questions and small asks are handled directly and may skip the file. The CEO decides, following the effort-scaling rules.
-- **Design sign-off** (a default; the Board may drop it). Before any M- or L-size engineering work is built, the CEO shows the Board a short gist of each design doc, and agents start building only after the Board approves it. A directive may waive this. S-size work has no design doc: the CEO states the plan when filing the directive.
+- **Design sign-off** (a default; the Board may change it). Only M- and L-size designs that touch the one-way list (`CLAUDE.md`, "The Board's attention" b) wait for the Board: the CEO shows it a short gist, and agents start building only after the Board approves it. The rest start after design review and the CEO's check; the Board sees a 3-line gist afterwards and can stop it. A directive may waive sign-off. S-size work has no design doc: the CEO states the plan when filing the directive.
+  - **The stricter choice,** offered in `/onboard-company`: every M and L design waits for the Board. The Board's choice, if it makes one, goes here in its words, with the date.
 - **Questions to the Board** come only from the CEO, batched where possible. Facts the company doesn't know are written in the KB as `TODO(board): …` until the Board answers.
 - **Reports.** The CEO reports when a directive finishes, when it's blocked on the Board, and after every production deploy (SA-001). `/report` gives a status across all directives at any time.
 - **Reviewing the company's memory.** Every KB change is a git commit in this repo, so the Board can review them in `git log` or in pull requests.

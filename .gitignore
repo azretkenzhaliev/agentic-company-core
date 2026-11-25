@@ -1,7 +1,7 @@
-# Product repos are cloned here; they have their own git history.
+# Product repos are cloned here; they have their own git history. Local state and logs live here too.
 workspaces/
 
-# Personal Claude Code settings (e.g. "agent": "ceo").
+# Personal Claude Code settings.
 .claude/settings.local.json
 
 # Local tooling scratch.
@@ -11,3 +11,15 @@ __pycache__/
 .DS_Store
 .env
 .env.*
+.telegram-mcp/
+
+# Obsidian editor settings (the Board's, per machine)
+.obsidian/
+
+# Dependencies of tools/ (installed with npm install there)
+node_modules/
+tools/marketing/footage/.venv/
+.remotion/
+
+# Claude Code subagent worktrees (isolation: worktree), e.g. the platform engineer's
+.claude/worktrees/

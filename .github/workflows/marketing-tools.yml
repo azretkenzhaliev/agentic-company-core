@@ -1,0 +1,22 @@
+name: marketing-tools
+
+on:
+  push:
+    paths: ["tools/marketing/**", "scripts/hooks/**", "scripts/kb_lint.py", "scripts/kb_secrets.py", "scripts/company_config.py", "scripts/notion_approvals_sync.py", ".claude/agents/marketing/reel-analyst.md", "knowledge/marketing/format-engine.md", ".github/workflows/marketing-tools.yml"]
+  pull_request:
+    paths: ["tools/marketing/**", "scripts/hooks/**", "scripts/kb_lint.py", "scripts/kb_secrets.py", "scripts/company_config.py", "scripts/notion_approvals_sync.py", ".claude/agents/marketing/reel-analyst.md", "knowledge/marketing/format-engine.md", ".github/workflows/marketing-tools.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  content-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests for content_lint (the renderer's tests need a browser and run locally)
+        run: python -m unittest discover -s tools/marketing/tests -v

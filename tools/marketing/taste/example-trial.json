@@ -1,0 +1,1322 @@
+{
+ "mode": "trial",
+ "page": "demo",
+ "title": "Day 1: demo",
+ "intro": "About 2 h 20 min of choosing, with a break about every 22 minutes. There are no right answers: go with your first look.",
+ "seed": 12345,
+ "break_minutes": 22,
+ "parts": [
+  {
+   "id": "p0",
+   "type": "pairwise",
+   "title": "Warm-up",
+   "minutes": 5,
+   "scored": false,
+   "rounds": 3,
+   "intro": [
+    {
+     "name": "Practice",
+     "line": "Six pairs to get the feel of it; they don't count."
+    }
+   ],
+   "items": [
+    {
+     "id": "c01",
+     "src": "ours/warmup-01.jpg"
+    },
+    {
+     "id": "c02",
+     "src": "ours/warmup-02.jpg"
+    },
+    {
+     "id": "c03",
+     "src": "ours/warmup-03.jpg"
+    },
+    {
+     "id": "c04",
+     "src": "ours/warmup-04.jpg"
+    }
+   ]
+  },
+  {
+   "id": "p1",
+   "type": "maxdiff",
+   "title": "Direction",
+   "minutes": 10,
+   "appearances": 3,
+   "question": "Which board is most like the page you want, and which least?",
+   "intro": [
+    {
+     "name": "Boards",
+     "line": "Each board is a whole direction: look, tone and pace together."
+    },
+    {
+     "name": "How to judge",
+     "line": "Quick gut call on the whole board, for the page you want it to become. Ignore topic, creator and polish; details come later. Close calls are fine."
+    }
+   ],
+   "items": [
+    {
+     "id": "b01",
+     "src": "ours/board-01.jpg"
+    },
+    {
+     "id": "b02",
+     "src": "ours/board-02.jpg"
+    },
+    {
+     "id": "b03",
+     "src": "ours/board-03.jpg"
+    },
+    {
+     "id": "b04",
+     "src": "ours/board-04.jpg"
+    },
+    {
+     "id": "b05",
+     "src": "ours/board-05.jpg"
+    },
+    {
+     "id": "b06",
+     "src": "ours/board-06.jpg"
+    },
+    {
+     "id": "b07",
+     "src": "ours/board-07.jpg"
+    },
+    {
+     "id": "b08",
+     "src": "ours/board-08.jpg"
+    },
+    {
+     "id": "b09",
+     "src": "ours/board-09.jpg"
+    },
+    {
+     "id": "b10",
+     "src": "ours/board-10.jpg"
+    },
+    {
+     "id": "b11",
+     "src": "ours/board-11.jpg"
+    },
+    {
+     "id": "b12",
+     "src": "ours/board-12.jpg"
+    },
+    {
+     "id": "b13",
+     "src": "ours/board-13.jpg"
+    },
+    {
+     "id": "b14",
+     "src": "ours/board-14.jpg"
+    },
+    {
+     "id": "b15",
+     "src": "ours/board-15.jpg"
+    },
+    {
+     "id": "b16",
+     "src": "ours/board-16.jpg"
+    }
+   ]
+  },
+  {
+   "id": "p2",
+   "type": "pairwise",
+   "title": "Other people's pieces",
+   "minutes": 20,
+   "rounds": 12,
+   "question": "Which would you rather have made?",
+   "intro": [
+    {
+     "name": "Whole pieces",
+     "line": "Real reels and posts, many things at once: judge each as a whole."
+    },
+    {
+     "name": "Formats",
+     "line": "Reels and posts have real references here; stories and grids are ours only."
+    }
+   ],
+   "items": [
+    {
+     "id": "r01",
+     "src": "ref/ExampleReel01.mp4",
+     "reel": "ExampleReel01"
+    },
+    {
+     "id": "r02",
+     "src": "ref/ExampleReel02.mp4",
+     "reel": "ExampleReel02"
+    },
+    {
+     "id": "r03",
+     "src": "ref/ExampleReel03.mp4",
+     "reel": "ExampleReel03"
+    },
+    {
+     "id": "r04",
+     "src": "ref/ExampleReel04.mp4",
+     "reel": "ExampleReel04"
+    },
+    {
+     "id": "r05",
+     "src": "ref/ExampleReel05.mp4",
+     "reel": "ExampleReel05"
+    },
+    {
+     "id": "r06",
+     "src": "ref/ExampleReel06.mp4",
+     "reel": "ExampleReel06"
+    },
+    {
+     "id": "r07",
+     "src": "ref/ExampleReel07.mp4",
+     "reel": "ExampleReel07"
+    },
+    {
+     "id": "r08",
+     "src": "ref/ExampleReel08.mp4",
+     "reel": "ExampleReel08"
+    },
+    {
+     "id": "r09",
+     "src": "ref/ExampleReel09.mp4",
+     "reel": "ExampleReel09"
+    },
+    {
+     "id": "r10",
+     "src": "ref/ExampleReel10.mp4",
+     "reel": "ExampleReel10"
+    },
+    {
+     "id": "r11",
+     "src": "ref/ExampleReel11.mp4",
+     "reel": "ExampleReel11"
+    },
+    {
+     "id": "r12",
+     "src": "ref/ExampleReel12.mp4",
+     "reel": "ExampleReel12"
+    },
+    {
+     "id": "r13",
+     "src": "ref/ExampleReel13.mp4",
+     "reel": "ExampleReel13"
+    },
+    {
+     "id": "r14",
+     "src": "ref/ExampleReel14.mp4",
+     "reel": "ExampleReel14"
+    },
+    {
+     "id": "r15",
+     "src": "ref/ExampleReel15.mp4",
+     "reel": "ExampleReel15"
+    },
+    {
+     "id": "r16",
+     "src": "ref/ExampleReel16.mp4",
+     "reel": "ExampleReel16"
+    },
+    {
+     "id": "p01",
+     "src": "ref/ExamplePost01.jpg",
+     "post": "ExamplePost01"
+    },
+    {
+     "id": "p02",
+     "src": "ref/ExamplePost02.jpg",
+     "post": "ExamplePost02"
+    },
+    {
+     "id": "p03",
+     "src": "ref/ExamplePost03.jpg",
+     "post": "ExamplePost03"
+    },
+    {
+     "id": "p04",
+     "src": "ref/ExamplePost04.jpg",
+     "post": "ExamplePost04"
+    },
+    {
+     "id": "p05",
+     "src": "ref/ExamplePost05.jpg",
+     "post": "ExamplePost05"
+    },
+    {
+     "id": "p06",
+     "src": "ref/ExamplePost06.jpg",
+     "post": "ExamplePost06"
+    },
+    {
+     "id": "p07",
+     "src": "ref/ExamplePost07.jpg",
+     "post": "ExamplePost07"
+    },
+    {
+     "id": "p08",
+     "src": "ref/ExamplePost08.jpg",
+     "post": "ExamplePost08"
+    }
+   ]
+  },
+  {
+   "id": "p3a",
+   "type": "cbc",
+   "title": "Reels",
+   "minutes": 17,
+   "tasks": 16,
+   "holdouts": 2,
+   "question": "Which reel would you post?",
+   "intro": [
+    {
+     "name": "Hook",
+     "line": "How it opens: a question, a bold claim or the result first."
+    },
+    {
+     "name": "Pacing",
+     "line": "A cut every 3-4 seconds, every 2 seconds or every second."
+    },
+    {
+     "name": "Face or screen",
+     "line": "Face to camera, a screen recording, or the face over the screen."
+    },
+    {
+     "name": "Captions",
+     "line": "Word by word, whole lines, or none."
+    },
+    {
+     "name": "Colour",
+     "line": "The grade: warm, neutral or cool."
+    },
+    {
+     "name": "Language",
+     "line": "German, English, or a German voice with English subtitles."
+    }
+   ],
+   "attributes": [
+    {
+     "id": "hook",
+     "name": "Hook",
+     "levels": [
+      {
+       "id": "question",
+       "label": "A question"
+      },
+      {
+       "id": "claim",
+       "label": "A bold claim"
+      },
+      {
+       "id": "result",
+       "label": "The result first"
+      }
+     ]
+    },
+    {
+     "id": "pace",
+     "name": "Pacing",
+     "levels": [
+      {
+       "id": "slow",
+       "label": "A cut every 3-4 s"
+      },
+      {
+       "id": "mid",
+       "label": "A cut every 2 s"
+      },
+      {
+       "id": "fast",
+       "label": "A cut every second"
+      }
+     ]
+    },
+    {
+     "id": "face",
+     "name": "Face or screen",
+     "levels": [
+      {
+       "id": "face",
+       "label": "Face to camera"
+      },
+      {
+       "id": "screen",
+       "label": "Screen recording"
+      },
+      {
+       "id": "split",
+       "label": "Face over the screen"
+      }
+     ]
+    },
+    {
+     "id": "subs",
+     "name": "Captions",
+     "levels": [
+      {
+       "id": "word",
+       "label": "Word by word"
+      },
+      {
+       "id": "line",
+       "label": "Whole lines"
+      },
+      {
+       "id": "none",
+       "label": "None"
+      }
+     ]
+    },
+    {
+     "id": "grade",
+     "name": "Colour",
+     "levels": [
+      {
+       "id": "warm",
+       "label": "Warm"
+      },
+      {
+       "id": "neutral",
+       "label": "Neutral"
+      },
+      {
+       "id": "cool",
+       "label": "Cool"
+      }
+     ]
+    },
+    {
+     "id": "lang",
+     "name": "Language",
+     "levels": [
+      {
+       "id": "de",
+       "label": "German"
+      },
+      {
+       "id": "en",
+       "label": "English"
+      },
+      {
+       "id": "deen",
+       "label": "German voice, English subtitles"
+      }
+     ]
+    }
+   ],
+   "media": "ours/reel-{hook}-{pace}-{face}-{subs}-{grade}-{lang}.mp4"
+  },
+  {
+   "id": "p3a-shorts",
+   "type": "cbc",
+   "title": "YouTube Shorts",
+   "minutes": 3,
+   "tasks": 4,
+   "holdouts": 0,
+   "question": "Which Short would you post?",
+   "intro": [
+    {
+     "name": "Length",
+     "line": "Under 30 seconds, 30-60 seconds or 1-3 minutes."
+    },
+    {
+     "name": "End screen",
+     "line": "It just ends, asks to subscribe, or points to the next video."
+    }
+   ],
+   "attributes": [
+    {
+     "id": "length",
+     "name": "Length",
+     "levels": [
+      {
+       "id": "s30",
+       "label": "Under 30 s"
+      },
+      {
+       "id": "s60",
+       "label": "30-60 s"
+      },
+      {
+       "id": "s180",
+       "label": "1-3 min"
+      }
+     ]
+    },
+    {
+     "id": "end",
+     "name": "End screen",
+     "levels": [
+      {
+       "id": "none",
+       "label": "Just ends"
+      },
+      {
+       "id": "sub",
+       "label": "Asks to subscribe"
+      },
+      {
+       "id": "next",
+       "label": "Points to the next video"
+      }
+     ]
+    }
+   ],
+   "media": "ours/short-{length}-{end}.mp4"
+  },
+  {
+   "id": "p3b",
+   "type": "cbc",
+   "title": "Carousels",
+   "minutes": 15,
+   "tasks": 14,
+   "holdouts": 2,
+   "question": "Which carousel would you post?",
+   "intro": [
+    {
+     "name": "Cover",
+     "line": "The first slide leads with a question, a number or a claim."
+    },
+    {
+     "name": "Words a slide",
+     "line": "Under 15, 15-30 or 30-50 words on each slide."
+    },
+    {
+     "name": "Diagrams",
+     "line": "Hand-drawn, clean flat, or a photo with labels."
+    },
+    {
+     "name": "Palette",
+     "line": "Dark, light or the brand colour."
+    },
+    {
+     "name": "Slides",
+     "line": "5, 8 or 12 slides."
+    },
+    {
+     "name": "Language",
+     "line": "German, English, or German with English lines."
+    }
+   ],
+   "attributes": [
+    {
+     "id": "cover",
+     "name": "Cover",
+     "levels": [
+      {
+       "id": "question",
+       "label": "A question"
+      },
+      {
+       "id": "number",
+       "label": "A number"
+      },
+      {
+       "id": "claim",
+       "label": "A claim"
+      }
+     ]
+    },
+    {
+     "id": "words",
+     "name": "Words a slide",
+     "levels": [
+      {
+       "id": "few",
+       "label": "Under 15"
+      },
+      {
+       "id": "some",
+       "label": "15-30"
+      },
+      {
+       "id": "many",
+       "label": "30-50"
+      }
+     ]
+    },
+    {
+     "id": "diagram",
+     "name": "Diagrams",
+     "levels": [
+      {
+       "id": "hand",
+       "label": "Hand-drawn"
+      },
+      {
+       "id": "flat",
+       "label": "Clean flat"
+      },
+      {
+       "id": "photo",
+       "label": "Photo with labels"
+      }
+     ]
+    },
+    {
+     "id": "palette",
+     "name": "Palette",
+     "levels": [
+      {
+       "id": "dark",
+       "label": "Dark"
+      },
+      {
+       "id": "light",
+       "label": "Light"
+      },
+      {
+       "id": "brand",
+       "label": "Brand colour"
+      }
+     ]
+    },
+    {
+     "id": "slides",
+     "name": "Slides",
+     "levels": [
+      {
+       "id": "n5",
+       "label": "5"
+      },
+      {
+       "id": "n8",
+       "label": "8"
+      },
+      {
+       "id": "n12",
+       "label": "12"
+      }
+     ]
+    },
+    {
+     "id": "lang",
+     "name": "Language",
+     "levels": [
+      {
+       "id": "de",
+       "label": "German"
+      },
+      {
+       "id": "en",
+       "label": "English"
+      },
+      {
+       "id": "deen",
+       "label": "German with English lines"
+      }
+     ]
+    }
+   ],
+   "media": "ours/carousel-{cover}-{words}-{diagram}-{palette}-{slides}-{lang}.jpg"
+  },
+  {
+   "id": "p3c",
+   "type": "cbc",
+   "title": "Single posts",
+   "minutes": 8,
+   "tasks": 10,
+   "holdouts": 1,
+   "question": "Which post would you post?",
+   "intro": [
+    {
+     "name": "Layout",
+     "line": "A photo, a text card or a diagram."
+    },
+    {
+     "name": "Text",
+     "line": "A headline only, a headline and 3 lines, or a paragraph."
+    },
+    {
+     "name": "Palette",
+     "line": "Dark, light or the brand colour."
+    },
+    {
+     "name": "Type",
+     "line": "Regular or bold."
+    },
+    {
+     "name": "Language",
+     "line": "German, English, or German with English lines."
+    }
+   ],
+   "attributes": [
+    {
+     "id": "layout",
+     "name": "Layout",
+     "levels": [
+      {
+       "id": "photo",
+       "label": "Photo"
+      },
+      {
+       "id": "card",
+       "label": "Text card"
+      },
+      {
+       "id": "diagram",
+       "label": "Diagram"
+      }
+     ]
+    },
+    {
+     "id": "text",
+     "name": "Text",
+     "levels": [
+      {
+       "id": "head",
+       "label": "Headline only"
+      },
+      {
+       "id": "lines",
+       "label": "Headline and 3 lines"
+      },
+      {
+       "id": "para",
+       "label": "A paragraph"
+      }
+     ]
+    },
+    {
+     "id": "palette",
+     "name": "Palette",
+     "levels": [
+      {
+       "id": "dark",
+       "label": "Dark"
+      },
+      {
+       "id": "light",
+       "label": "Light"
+      },
+      {
+       "id": "brand",
+       "label": "Brand colour"
+      }
+     ]
+    },
+    {
+     "id": "type",
+     "name": "Type",
+     "levels": [
+      {
+       "id": "regular",
+       "label": "Regular"
+      },
+      {
+       "id": "bold",
+       "label": "Bold"
+      }
+     ]
+    },
+    {
+     "id": "lang",
+     "name": "Language",
+     "levels": [
+      {
+       "id": "de",
+       "label": "German"
+      },
+      {
+       "id": "en",
+       "label": "English"
+      },
+      {
+       "id": "deen",
+       "label": "German with English lines"
+      }
+     ]
+    }
+   ],
+   "media": "ours/post-{layout}-{text}-{palette}-{type}-{lang}.jpg"
+  },
+  {
+   "id": "p3d",
+   "type": "cbc",
+   "title": "Stories and Highlights",
+   "minutes": 8,
+   "tasks": 10,
+   "holdouts": 1,
+   "question": "Which story would you post?",
+   "intro": [
+    {
+     "name": "Stickers",
+     "line": "None, a poll or a quiz."
+    },
+    {
+     "name": "Text",
+     "line": "A few words, a sentence or a paragraph on each frame."
+    },
+    {
+     "name": "Highlight covers",
+     "line": "Line icons, filled icons or photos."
+    },
+    {
+     "name": "Length",
+     "line": "3, 5 or 8 frames."
+    },
+    {
+     "name": "Finish",
+     "line": "Raw phone, edited or designed."
+    }
+   ],
+   "attributes": [
+    {
+     "id": "sticker",
+     "name": "Stickers",
+     "levels": [
+      {
+       "id": "none",
+       "label": "None"
+      },
+      {
+       "id": "poll",
+       "label": "A poll"
+      },
+      {
+       "id": "quiz",
+       "label": "A quiz"
+      }
+     ]
+    },
+    {
+     "id": "text",
+     "name": "Text",
+     "levels": [
+      {
+       "id": "low",
+       "label": "A few words"
+      },
+      {
+       "id": "mid",
+       "label": "A sentence"
+      },
+      {
+       "id": "high",
+       "label": "A paragraph"
+      }
+     ]
+    },
+    {
+     "id": "icon",
+     "name": "Highlight covers",
+     "levels": [
+      {
+       "id": "line",
+       "label": "Line icons"
+      },
+      {
+       "id": "filled",
+       "label": "Filled icons"
+      },
+      {
+       "id": "photo",
+       "label": "Photos"
+      }
+     ]
+    },
+    {
+     "id": "frames",
+     "name": "Length",
+     "levels": [
+      {
+       "id": "f3",
+       "label": "3 frames"
+      },
+      {
+       "id": "f5",
+       "label": "5 frames"
+      },
+      {
+       "id": "f8",
+       "label": "8 frames"
+      }
+     ]
+    },
+    {
+     "id": "finish",
+     "name": "Finish",
+     "levels": [
+      {
+       "id": "raw",
+       "label": "Raw phone"
+      },
+      {
+       "id": "edited",
+       "label": "Edited"
+      },
+      {
+       "id": "designed",
+       "label": "Designed"
+      }
+     ]
+    }
+   ],
+   "media": "ours/story-{sticker}-{text}-{icon}-{frames}-{finish}.mp4"
+  },
+  {
+   "id": "p3e",
+   "type": "pairwise",
+   "title": "The grid",
+   "minutes": 8,
+   "rounds": 10,
+   "question": "Which profile grid would you rather have?",
+   "intro": [
+    {
+     "name": "Pattern",
+     "line": "How the formats repeat across the grid."
+    },
+    {
+     "name": "Colour rhythm",
+     "line": "How the colours repeat across the grid."
+    },
+    {
+     "name": "Covers",
+     "line": "How alike the covers look."
+    }
+   ],
+   "items": [
+    {
+     "id": "g01",
+     "src": "ours/grid-01.jpg"
+    },
+    {
+     "id": "g02",
+     "src": "ours/grid-02.jpg"
+    },
+    {
+     "id": "g03",
+     "src": "ours/grid-03.jpg"
+    },
+    {
+     "id": "g04",
+     "src": "ours/grid-04.jpg"
+    },
+    {
+     "id": "g05",
+     "src": "ours/grid-05.jpg"
+    },
+    {
+     "id": "g06",
+     "src": "ours/grid-06.jpg"
+    },
+    {
+     "id": "g07",
+     "src": "ours/grid-07.jpg"
+    },
+    {
+     "id": "g08",
+     "src": "ours/grid-08.jpg"
+    }
+   ]
+  },
+  {
+   "id": "p4",
+   "type": "sequence",
+   "title": "Fine details",
+   "minutes": 15,
+   "intro": [
+    {
+     "name": "Seven steps",
+     "line": "One thing changes, least to most. Pick the best step and the range you'd accept."
+    },
+    {
+     "name": "Twice",
+     "line": "Every row comes again later, the other way round."
+    }
+   ],
+   "dimensions": [
+    {
+     "id": "text-area",
+     "name": "Text area on a slide",
+     "steps": [
+      "ours/fine-text-area-1.jpg",
+      "ours/fine-text-area-2.jpg",
+      "ours/fine-text-area-3.jpg",
+      "ours/fine-text-area-4.jpg",
+      "ours/fine-text-area-5.jpg",
+      "ours/fine-text-area-6.jpg",
+      "ours/fine-text-area-7.jpg"
+     ],
+     "labels": [
+      "10%",
+      "20%",
+      "30%",
+      "40%",
+      "50%",
+      "60%",
+      "70%"
+     ]
+    },
+    {
+     "id": "saturation",
+     "name": "Colour saturation",
+     "steps": [
+      "ours/fine-saturation-1.jpg",
+      "ours/fine-saturation-2.jpg",
+      "ours/fine-saturation-3.jpg",
+      "ours/fine-saturation-4.jpg",
+      "ours/fine-saturation-5.jpg",
+      "ours/fine-saturation-6.jpg",
+      "ours/fine-saturation-7.jpg"
+     ]
+    },
+    {
+     "id": "font-weight",
+     "name": "Font weight",
+     "steps": [
+      "ours/fine-font-weight-1.jpg",
+      "ours/fine-font-weight-2.jpg",
+      "ours/fine-font-weight-3.jpg",
+      "ours/fine-font-weight-4.jpg",
+      "ours/fine-font-weight-5.jpg",
+      "ours/fine-font-weight-6.jpg",
+      "ours/fine-font-weight-7.jpg"
+     ],
+     "labels": [
+      "300",
+      "400",
+      "500",
+      "600",
+      "700",
+      "800",
+      "900"
+     ]
+    },
+    {
+     "id": "subtitle-size",
+     "name": "Subtitle size",
+     "steps": [
+      "ours/fine-subtitle-size-1.jpg",
+      "ours/fine-subtitle-size-2.jpg",
+      "ours/fine-subtitle-size-3.jpg",
+      "ours/fine-subtitle-size-4.jpg",
+      "ours/fine-subtitle-size-5.jpg",
+      "ours/fine-subtitle-size-6.jpg",
+      "ours/fine-subtitle-size-7.jpg"
+     ]
+    },
+    {
+     "id": "contrast",
+     "name": "Contrast",
+     "steps": [
+      "ours/fine-contrast-1.jpg",
+      "ours/fine-contrast-2.jpg",
+      "ours/fine-contrast-3.jpg",
+      "ours/fine-contrast-4.jpg",
+      "ours/fine-contrast-5.jpg",
+      "ours/fine-contrast-6.jpg",
+      "ours/fine-contrast-7.jpg"
+     ]
+    },
+    {
+     "id": "margins",
+     "name": "Space around the text",
+     "steps": [
+      "ours/fine-margins-1.jpg",
+      "ours/fine-margins-2.jpg",
+      "ours/fine-margins-3.jpg",
+      "ours/fine-margins-4.jpg",
+      "ours/fine-margins-5.jpg",
+      "ours/fine-margins-6.jpg",
+      "ours/fine-margins-7.jpg"
+     ]
+    },
+    {
+     "id": "line-spacing",
+     "name": "Line spacing",
+     "steps": [
+      "ours/fine-line-spacing-1.jpg",
+      "ours/fine-line-spacing-2.jpg",
+      "ours/fine-line-spacing-3.jpg",
+      "ours/fine-line-spacing-4.jpg",
+      "ours/fine-line-spacing-5.jpg",
+      "ours/fine-line-spacing-6.jpg",
+      "ours/fine-line-spacing-7.jpg"
+     ]
+    },
+    {
+     "id": "face-size",
+     "name": "Face size in the frame",
+     "steps": [
+      "ours/fine-face-size-1.jpg",
+      "ours/fine-face-size-2.jpg",
+      "ours/fine-face-size-3.jpg",
+      "ours/fine-face-size-4.jpg",
+      "ours/fine-face-size-5.jpg",
+      "ours/fine-face-size-6.jpg",
+      "ours/fine-face-size-7.jpg"
+     ]
+    },
+    {
+     "id": "brightness",
+     "name": "Brightness",
+     "steps": [
+      "ours/fine-brightness-1.jpg",
+      "ours/fine-brightness-2.jpg",
+      "ours/fine-brightness-3.jpg",
+      "ours/fine-brightness-4.jpg",
+      "ours/fine-brightness-5.jpg",
+      "ours/fine-brightness-6.jpg",
+      "ours/fine-brightness-7.jpg"
+     ]
+    },
+    {
+     "id": "corners",
+     "name": "Corner rounding on panels",
+     "steps": [
+      "ours/fine-corners-1.jpg",
+      "ours/fine-corners-2.jpg",
+      "ours/fine-corners-3.jpg",
+      "ours/fine-corners-4.jpg",
+      "ours/fine-corners-5.jpg",
+      "ours/fine-corners-6.jpg",
+      "ours/fine-corners-7.jpg"
+     ]
+    },
+    {
+     "id": "grain",
+     "name": "Film grain",
+     "steps": [
+      "ours/fine-grain-1.jpg",
+      "ours/fine-grain-2.jpg",
+      "ours/fine-grain-3.jpg",
+      "ours/fine-grain-4.jpg",
+      "ours/fine-grain-5.jpg",
+      "ours/fine-grain-6.jpg",
+      "ours/fine-grain-7.jpg"
+     ]
+    },
+    {
+     "id": "music",
+     "name": "Music under the voice",
+     "steps": [
+      "ours/fine-music-1.mp4",
+      "ours/fine-music-2.mp4",
+      "ours/fine-music-3.mp4",
+      "ours/fine-music-4.mp4",
+      "ours/fine-music-5.mp4",
+      "ours/fine-music-6.mp4",
+      "ours/fine-music-7.mp4"
+     ],
+     "labels": [
+      "Silent",
+      "-36 dB",
+      "-30 dB",
+      "-26 dB",
+      "-22 dB",
+      "-18 dB",
+      "-14 dB"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p4b",
+   "type": "range",
+   "title": "Lengths and endings",
+   "minutes": 5,
+   "question": "What's fine? Pick the best too, if there is one.",
+   "intro": [
+    {
+     "name": "Ranges",
+     "line": "The audience's numbers choose inside these; outside them is never tried."
+    },
+    {
+     "name": "Any width",
+     "line": "A wide range and a narrow one are both answers."
+    }
+   ],
+   "dimensions": [
+    {
+     "id": "reel-length",
+     "name": "Reel length",
+     "values": [
+      "10 s",
+      "15 s",
+      "20 s",
+      "30 s",
+      "45 s",
+      "60 s",
+      "90 s"
+     ]
+    },
+    {
+     "id": "hook-time",
+     "name": "Time to the hook",
+     "values": [
+      "0.5 s",
+      "1 s",
+      "1.5 s",
+      "2 s",
+      "3 s",
+      "5 s"
+     ]
+    },
+    {
+     "id": "short-length",
+     "name": "Shorts length",
+     "values": [
+      "15 s",
+      "30 s",
+      "45 s",
+      "60 s",
+      "90 s",
+      "2 min",
+      "3 min"
+     ]
+    },
+    {
+     "id": "slides",
+     "name": "Carousel slides",
+     "values": [
+      "3",
+      "5",
+      "7",
+      "10",
+      "15",
+      "20"
+     ]
+    },
+    {
+     "id": "caption",
+     "name": "Caption length",
+     "values": [
+      "One line",
+      "2-3 lines",
+      "A paragraph",
+      "Several paragraphs"
+     ]
+    },
+    {
+     "id": "story-frames",
+     "name": "Stories in a row",
+     "values": [
+      "1",
+      "2-3",
+      "4-5",
+      "6-8",
+      "9 or more"
+     ]
+    },
+    {
+     "id": "ending",
+     "name": "How a reel ends",
+     "ordered": false,
+     "values": [
+      "Loops to the start",
+      "A question to the viewer",
+      "Asks to follow",
+      "Points to part 2",
+      "Just ends"
+     ]
+    },
+    {
+     "id": "cta",
+     "name": "Call to action",
+     "ordered": false,
+     "values": [
+      "None",
+      "Save this",
+      "Send it to a friend",
+      "Comment a word",
+      "Follow for more"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p5",
+   "type": "notes",
+   "title": "Say what you notice",
+   "minutes": 20,
+   "question": "Type what you notice, as it comes. No need to explain why.",
+   "intro": [
+    {
+     "name": "Notes",
+     "line": "Eight pieces, one at a time. Short notes are fine."
+    }
+   ],
+   "items": [
+    {
+     "id": "r01",
+     "src": "ref/ExampleReel01.mp4",
+     "reel": "ExampleReel01"
+    },
+    {
+     "id": "r04",
+     "src": "ref/ExampleReel04.mp4",
+     "reel": "ExampleReel04"
+    },
+    {
+     "id": "p01",
+     "src": "ref/ExamplePost01.jpg",
+     "post": "ExamplePost01"
+    },
+    {
+     "id": "p04",
+     "src": "ref/ExamplePost04.jpg",
+     "post": "ExamplePost04"
+    },
+    {
+     "id": "n01",
+     "src": "ours/notes-01.jpg"
+    },
+    {
+     "id": "n02",
+     "src": "ours/notes-02.jpg"
+    },
+    {
+     "id": "n03",
+     "src": "ours/notes-03.jpg"
+    },
+    {
+     "id": "n04",
+     "src": "ours/notes-04.jpg"
+    }
+   ]
+  },
+  {
+   "id": "p6",
+   "type": "redlines",
+   "title": "Hard NOs",
+   "minutes": 5,
+   "question": "Tick what must never appear on this page, and add your own.",
+   "intro": [
+    {
+     "name": "Red lines",
+     "line": "These are never traded off and never tried, whatever the numbers say."
+    }
+   ],
+   "candidates": [
+    "Shocked-face thumbnails",
+    "An AI voice instead of mine",
+    "Songs with lyrics under my voice",
+    "Mocking a person or a company",
+    "Numbers or results we can't show",
+    "Stock footage",
+    "Gambling or betting",
+    "Get-rich-quick promises",
+    "English only, no German"
+   ]
+  },
+  {
+   "id": "p7",
+   "type": "checklist",
+   "title": "The second page",
+   "minutes": 3,
+   "question": "Everything you chose today also goes to the second page. Tick anything that is not for it.",
+   "mark": "Not for it",
+   "intro": [],
+   "candidates": [
+    "The direction you chose",
+    "Reel pace",
+    "Reel grade",
+    "Carousel cover",
+    "The red lines"
+   ]
+  }
+ ]
+}

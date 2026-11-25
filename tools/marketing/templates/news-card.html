@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- A news card, 1080x1350, for a brand whose "news" is true in company.json. Our own visual: no screenshots of other people's media.
+     The source line is required: publisher and date. The take is the founder's own words only. -->
+<html lang="en"><head><meta charset="utf-8">
+<style>
+  :root { --bg: #0f1014; --fg: #f4f2ec; --accent: #7cf29c; --muted: #9a9890; }
+  body { width: 1080px; height: 1350px; box-sizing: border-box; padding: 96px 88px; display: flex; flex-direction: column; }
+  .label { font: 700 30px 'Golos Text', sans-serif; letter-spacing: .1em; color: var(--accent); }
+  h1 { font-weight: 800; font-size: 84px; margin-top: 40px; }
+  .take { margin-top: 56px; padding: 40px 44px; border-left: 10px solid var(--accent); background: rgba(255,255,255,.04); font-size: 44px; }
+  .take b { display: block; font: 700 28px 'Golos Text', sans-serif; color: var(--muted); margin-bottom: 18px; text-transform: uppercase; letter-spacing: .08em; }
+  .source { margin-top: auto; font: 600 28px 'Golos Text', sans-serif; color: var(--muted); }
+</style></head>
+<body>
+  <div class="label">NEWS</div>
+  <h1>The news in one or two lines</h1>
+  <div class="take"><b>My take</b>placeholder: the founder's take goes here, in his words</div>
+  <div class="source">Source: Publisher, 2026-01-28</div>
+</body></html>

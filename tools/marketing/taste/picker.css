@@ -1,0 +1,179 @@
+/* A colourist's surround: pure neutral grey, so the page doesn't tint the frames being judged.
+   Everything is black, white or grey. The one colour marks what the Board changed. */
+:root {
+  --surround: #3a3a3a;
+  --deep: #2b2b2b;
+  --text: #f5f5f5;
+  --dim: #cdcdcd;
+  --line: #6e6e6e;
+  --mine: #ffb000;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--surround);
+  color: var(--text);
+  font: 400 16px/1.45 "Golos Text", -apple-system, "Helvetica Neue", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+a { color: inherit; text-underline-offset: 3px; }
+main { max-width: 1400px; margin: 0 auto; padding: 0 16px 140px; }
+
+.intro { padding: 40px 0 24px; max-width: 74ch; }
+.intro h1 { margin: 0 0 14px; font-size: clamp(34px, 6vw, 60px); line-height: 1.05; font-weight: 600; letter-spacing: -0.015em; }
+.intro p { margin: 0 0 12px; }
+.intro .lead { font-size: 19px; }
+.warn { margin: 18px 0; padding: 14px 16px; background: #000; }
+.assumed, .questions { margin-top: 26px; }
+.assumed h2, .questions h2 { margin: 0 0 8px; font-size: 19px; font-weight: 600; }
+.assumed ul { margin: 0; padding-left: 20px; color: var(--dim); }
+.assumed li { margin-bottom: 7px; }
+
+.question { margin: 0 0 16px; padding: 0; border: 0; }
+.question legend { margin-bottom: 6px; padding: 0; font-weight: 600; font-size: 15px; }
+.options { display: flex; flex-wrap: wrap; gap: 6px; }
+.options input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.options label {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--dim);
+  font-size: 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.options input:checked + label { background: #fff; border-color: #fff; color: #000; font-weight: 600; }
+.options input:focus-visible + label { outline: 2px solid var(--text); outline-offset: 2px; }
+
+.item { padding: 26px 0 30px; border-top: 1px solid var(--line); }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin-bottom: 12px; }
+.who { margin: 0; font-size: 19px; font-weight: 600; }
+.mult { margin: 0; font-weight: 600; }
+.format { margin: 0; color: var(--dim); }
+.place { margin: 0 0 0 auto; color: var(--dim); }
+
+.frames {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px 14px;
+  padding: 0 16px;
+}
+.frames img {
+  flex: 0 0 auto;
+  display: block;
+  width: 46vw;
+  height: auto;
+  scroll-snap-align: center;
+  cursor: zoom-in;
+  background: #000;
+}
+
+.aspect {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #4d4d4d;
+}
+.aspect .name { grid-column: 1; margin: 0; font-weight: 600; font-size: 15px; }
+.aspect .seen { grid-column: 1; margin: 0; color: var(--dim); font-size: 13px; line-height: 1.3; overflow-wrap: anywhere; }
+.aspect .seen img { display: block; width: 120px; height: auto; margin-top: 4px; cursor: zoom-in; }
+.aspect .toggle { grid-column: 2; grid-row: 1 / span 2; display: flex; }
+.aspect.changed .name { color: var(--mine); }
+.aspect.changed .name::after { content: ", changed"; font-weight: 400; }
+
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle label {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.toggle label:first-of-type { border-radius: 8px 0 0 8px; border-right: 0; }
+.toggle label:last-of-type { border-radius: 0 8px 8px 0; }
+.toggle input[value="L"]:checked + label { background: #fff; border-color: #fff; color: #000; font-weight: 600; }
+.toggle input[value="D"]:checked + label { background: #000; border-color: #000; color: #fff; font-weight: 600; }
+.toggle input:focus-visible + label { outline: 2px solid var(--text); outline-offset: 2px; }
+
+.note {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit; /* 16 px keeps iOS from zooming in on focus */
+}
+.note::placeholder { color: #b5b5b5; }
+.note:focus-visible, a:focus-visible, .frames:focus-visible, .bar button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+.bar {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--deep);
+  border-top: 1px solid var(--line);
+}
+.js .bar { display: block; }
+.bar .row { display: flex; align-items: center; gap: 14px; max-width: 1368px; margin: 0 auto; }
+.bar .state { flex: 1; min-width: 0; margin: 0; font-size: 14px; color: var(--dim); }
+.bar .state b { color: var(--text); font-weight: 600; }
+.bar button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  font: 600 16px/1 "Golos Text", -apple-system, "Helvetica Neue", sans-serif;
+  cursor: pointer;
+}
+#out {
+  display: none;
+  width: 100%;
+  max-width: 1368px;
+  height: 34vh;
+  margin: 0 auto 10px;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  font: 400 13px/1.4 "Golos Text", -apple-system, "Helvetica Neue", sans-serif;
+}
+#out.shown { display: block; }
+
+dialog { padding: 0; border: 0; background: transparent; max-width: 100vw; max-height: 100vh; }
+dialog::backdrop { background: rgba(0, 0, 0, 0.92); }
+dialog img { display: block; width: 96vw; height: 94vh; object-fit: contain; cursor: zoom-out; }
+
+@media (min-width: 980px) {
+  main { padding: 0 24px 120px; }
+  .intro { padding-top: 64px; }
+  .item { display: grid; grid-template-columns: minmax(0, 1fr) 440px; grid-template-rows: auto 1fr; gap: 0 28px; }
+  .head { grid-column: 1 / -1; }
+  .frames { display: grid; grid-template-columns: repeat(6, 1fr); overflow: visible; margin: 0; padding: 0; align-self: start; }
+  .frames img { width: 100%; }
+  .aspects { grid-column: 2; }
+  .aspect:first-child { padding-top: 0; }
+}

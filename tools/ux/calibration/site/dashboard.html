@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders – Store console</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; background: #fff; }
+  header, main { max-width: 1100px; margin: 0 auto; padding: 16px 24px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; border-bottom: 1px solid #ddd; }
+  h1 { font-size: 28px; margin: 0; }
+  #last-updated { margin: 0; font-size: 14px; color: #999; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-left: auto; }
+  .toolbar label { font-size: 14px; }
+  .toolbar input { font: inherit; padding: 6px 10px; border: 1px solid #767676; border-radius: 6px; width: 220px; max-width: 100%; }
+  .btn { font: inherit; padding: 8px 16px; border: 1px solid #1f4fa3; border-radius: 6px; background: #1f4fa3; color: #fff; cursor: pointer; }
+  .icon-btn { width: 32px; height: 32px; padding: 4px; border: 1px solid #767676; border-radius: 6px; background: #fff; cursor: pointer; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .chip { font: inherit; font-size: 14px; padding: 6px 14px; border: 1px solid #767676; border-radius: 999px; background: #fff; color: #1a1a1a; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: #1a1a1a; color: #fff; }
+  .chip:focus { outline: none; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #ddd; white-space: nowrap; }
+  th { font-size: 14px; color: #444; }
+  .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+  .dot.ok { background: #2e7d32; }
+  .dot.moving { background: #f9a825; }
+  .dot.late { background: #c62828; }
+  .actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-top: 16px; }
+  .danger { background: #b71c1c; border-color: #b71c1c; }
+  .pager { display: flex; gap: 0; }
+  .pager button { width: 16px; height: 16px; padding: 0; font: 11px/16px system-ui, sans-serif; border: 0; background: #e8e8e8; color: #1a1a1a; cursor: pointer; }
+  .pager button[aria-current="page"] { background: #1a1a1a; color: #fff; }
+  .notice { height: 260px; padding: 24px; background: #fff4e5; color: #1a1a1a; border-bottom: 1px solid #e0c9a6; font-size: 18px; }
+  .empty { padding: 24px 12px; color: #444; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Orders</h1>
+  <p id="last-updated">Last updated 10:30</p>
+  <div class="toolbar">
+    <label for="search">Search orders</label>
+    <input id="search" type="search" autocomplete="off">
+    <button class="btn" id="export" type="button">Export</button>
+    <button class="icon-btn" id="settings" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="8" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-dasharray="4 2.3"/><circle cx="12" cy="12" r="3.5" fill="#1a1a1a"/></svg></button>
+  </div>
+</header>
+<main>
+  <h2>Open orders</h2>
+  <div class="chips" role="group" aria-label="Filter by status">
+    <button class="chip" type="button" aria-pressed="true" data-filter="all">All</button>
+    <button class="chip" type="button" aria-pressed="false" data-filter="moving">In progress</button>
+    <button class="chip" type="button" aria-pressed="false" data-filter="ok">Finished</button>
+    <button class="chip" type="button" aria-pressed="false" data-filter="late">Late</button>
+  </div>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Orders table">
+    <table>
+      <thead>
+        <tr><th scope="col">Order</th><th scope="col">Contents</th><th scope="col">Due</th><th scope="col">Status</th></tr>
+      </thead>
+      <tbody id="rows">
+        <tr data-status="ok"><td>OR-1041</td><td>Desk lamp, 2 bulbs</td><td>Mar 4, 14:00</td><td><span class="dot ok"></span></td></tr>
+        <tr data-status="moving"><td>OR-1042</td><td>Paper, 5 boxes</td><td>Mar 6, 18:30</td><td><span class="dot moving"></span></td></tr>
+        <tr data-status="late"><td>OR-1043</td><td>Office chair</td><td>Mar 5, 09:00</td><td><span class="dot late"></span></td></tr>
+        <tr data-status="moving"><td>OR-1044</td><td>Keyboard, mouse</td><td>Mar 7, 11:15</td><td><span class="dot moving"></span></td></tr>
+        <tr data-status="ok"><td>OR-1045</td><td>Whiteboard, markers</td><td>Mar 3, 16:45</td><td><span class="dot ok"></span></td></tr>
+        <tr data-status="ok"><td>OR-1046</td><td>Monitor stand</td><td>Mar 2, 08:20</td><td><span class="dot ok"></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="actions">
+    <button class="btn" id="refresh" type="button" tabindex="1">Refresh</button>
+    <button class="btn danger" id="delete-all" type="button">Delete all</button>
+    <nav class="pager" aria-label="Pages">
+      <button type="button" aria-current="page">1</button>
+      <button type="button">2</button>
+      <button type="button">3</button>
+    </nav>
+  </div>
+</main>
+<script>
+  const rows = document.getElementById('rows');
+  for (const chip of document.querySelectorAll('.chip')) {
+    chip.addEventListener('click', () => {
+      for (const c of document.querySelectorAll('.chip')) c.setAttribute('aria-pressed', String(c === chip));
+      for (const tr of rows.querySelectorAll('tr[data-status]')) {
+        tr.hidden = chip.dataset.filter !== 'all' && tr.dataset.status !== chip.dataset.filter;
+      }
+    });
+  }
+  document.getElementById('refresh').addEventListener('click', () => {
+    const now = new Date();
+    document.getElementById('last-updated').textContent =
+      `Last updated ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  });
+  document.getElementById('delete-all').addEventListener('click', () => {
+    rows.innerHTML = '<tr><td class="empty" colspan="4">No orders.</td></tr>';
+  });
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const notice = document.createElement('div');
+      notice.className = 'notice';
+      notice.setAttribute('role', 'status');
+      notice.textContent = 'Scheduled maintenance on Saturday, 02:00–04:00. Order updates may be late.';
+      document.body.prepend(notice);
+    }, 600);
+  });
+</script>
+</body>
+</html>

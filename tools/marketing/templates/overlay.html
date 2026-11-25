@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- A transparent 9:16 text overlay for video/compile.mjs: render with
+     node render/png.mjs --html overlay.html --out <name>.png --size 1080x1920 --transparent
+     Text stays inside the reel's safe zone (top 250 px, bottom 340 px clear). Edit the text and the colours only. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --bg: transparent; --fg: #f4f2ec; --accent: #7cf29c; }
+  html, body { background: transparent; margin: 0; width: 1080px; height: 1920px; }
+  .box { position: absolute; left: 88px; right: 88px; top: 250px; padding: 28px 36px;
+         background: rgba(15, 16, 20, 0.72); border-left: 12px solid var(--accent); }
+  h1 { margin: 0; font: 800 72px/1.1 'Montserrat', sans-serif; color: var(--fg); }
+  p { margin: 16px 0 0; font: 700 40px/1.25 'Golos Text', sans-serif; color: var(--fg); }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>Headline</h1>
+    <p>One short line</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+ "hook_event_name": "PostToolUse",
+ "tool_name": "mcp__claude_ai_Notion__notion-query-data-sources",
+ "tool_input": {
+  "data": {
+   "mode": "rows",
+   "data_source_url": "collection://calendar-data-source",
+   "limit": 50
+  }
+ },
+ "tool_response": [
+  {
+   "type": "text",
+   "text": "{\"results\": [{\"KB page\": \"knowledge/marketing/founder/demo/content/2026-W05/mon-reel.md\", \"Status\": \"Ready for Board\", \"Approval\": \"Approved\", \"Board comment\": \"\", \"Brand\": \"demo\", \"Week\": \"2026-W05\", \"Name\": \"Mon reel: placeholder take\", \"url\": \"https://app.notion.com/p/aaa1\"}, {\"KB page\": \"knowledge/marketing/founder/demo/content/2026-W05/wed-carousel.md\", \"Status\": \"Ready for Board\", \"Approval\": \"Changes\", \"Board comment\": \"Slide 3: use | my own words\\nnot this\", \"Brand\": \"demo\", \"Week\": \"2026-W05\", \"Name\": \"Wed carousel\", \"url\": \"https://app.notion.com/p/aaa2\"}, {\"KB page\": \"\", \"Status\": \"Draft\", \"Board comment\": \"\", \"Brand\": \"demo\", \"Week\": \"2026-W05\", \"Name\": \"Fri story\", \"url\": \"https://app.notion.com/p/aaa3\"}, {\"KB page\": \"\", \"Status\": \"Draft\", \"Board comment\": \"\", \"Brand\": \"demo\", \"Week\": \"2026-W00\", \"Name\": \"A row with a bad week\", \"url\": \"https://app.notion.com/p/aaa4\"}], \"has_more\": false}"
+  }
+ ]
+}

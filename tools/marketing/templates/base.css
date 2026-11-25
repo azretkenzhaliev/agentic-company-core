@@ -1,0 +1,13 @@
+/* Defaults for every template, injected by render/png.mjs after the page loads.
+   :where() keeps them at zero specificity, so a template's own rules always win.
+   Brand colours come from each template's :root variables (the brand book's visual rules). */
+:where(html, body) { margin: 0; padding: 0; }
+:where(body) {
+  background: var(--bg, #0f1014);
+  color: var(--fg, #f4f2ec);
+  font-family: 'Golos Text', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+:where(h1, h2, h3, .display) { font-family: 'Montserrat', sans-serif; margin: 0; line-height: 1.05; }
+:where(p) { margin: 0; line-height: 1.35; }

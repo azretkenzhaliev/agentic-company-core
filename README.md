@@ -1,94 +1,1715 @@
-# agentic-company
+# agentic-company-core
 
-A startup run by Claude Code agents. You, the founder, are the **Board of Directors**: you set direction and talk only to a **CEO** agent. The CEO turns what you ask for into orders for an **analyst** (research) and an **engineering department**: a CTO who plans the work, Staff engineers who design and land one workstream each, Senior engineers who implement one task each, and independent design and code reviewers. A markdown **knowledge base** in git is the company's shared memory.
+A startup run by Claude Code agents: you are the Board, and you talk only to the CEO.
 
-Everything is plain Claude Code: agent definitions, skills, hooks and permission rules. No extra framework, and it runs on your Claude subscription.
+[Русский](#ru) · [Кыргызча](#ky) · [Oʻzbekcha](#uz) · [Қазақша](#kk) · [English](#en)
 
-```
-Board (you)
-└── ceo                      also acting CMO, CSO and CPO
-    ├── analyst              research; writes raw, sourced notes
-    └── cto                  architecture, roadmaps, standards, runbooks
-        └── staff-engineer   one workstream: design → reviews → tasks → landing
-            ├── design-reviewer   read-only, checks designs against the real code
-            ├── senior-engineer   implements one task, with tests
-            └── code-reviewer     read-only, checks each diff
-```
+<a id="ru"></a>
 
-## What makes it work
+## Русский
 
-- **A constitution** ([`CLAUDE.md`](CLAUDE.md)) every agent loads: who decides what, the chain of command, message formats (ORDER, REPORT, VERDICT), and safety rules. Nothing leaves the company (emails, posts, purchases, sign-ups) without the Board.
-- **Directives.** Anything you ask for is filed as `knowledge/board/directives/D-YYYYMMDD-<slug>.md`, with your words verbatim, the CEO's plan, every order sent, a status log and the final report.
-- **Effort scaling.** Questions are answered directly; a small change goes CTO → Senior with a code review; a workstream gets a short design doc that you approve as a gist before anything is built; bigger work gets a roadmap with parallel workstreams.
-- **Bounded review loops.** At most three rounds of design review and three of code review, the third a closing round, then escalation with both positions.
-- **Gated deploys.** Autonomous production deploys only through a verified runbook, behind every gate, with an immediate rollback when a smoke check fails ([SA-001](knowledge/board/standing-authorizations.md)).
-- **Persistence through stops.** Verdicts and state go into the knowledge base as they happen, so a usage limit or an outage costs minutes, not the work.
-- **Hooks** that hold the line: who may spawn whom (`guard_agent_spawn.py`), no secrets in the knowledge base (`guard_kb_write.py`), and pre-approved plain git reads so background agents don't stall on prompts (`approve_git_reads.py`).
-- **Lessons learned** from running this on real products, in [`knowledge/engineering/standards/lessons-learned.md`](knowledge/engineering/standards/lessons-learned.md).
+### Что это
 
-## Set up
+Это компания, которую ведут агенты с искусственным интеллектом внутри Claude Code — программы, которая работает в терминале (окне, где вводят команды). Вы основатель, агенты называют вас **Board** (совет директоров): вы простыми словами говорите, чего хотите, и общаетесь только с агентом по имени **CEO**. CEO раздаёт работу другим агентам (инженерам, проверяющим, исследователю и, если вы его включите, отделу маркетинга), спрашивает вас только о том, что решать вам, и хранит всё в папке с текстовыми страницами. Подробнее: [руководство](docs/guide.md) (на английском). Лицензия: [MIT](LICENSE).
 
-| Need | Why | Check |
-|---|---|---|
-| [Claude Code](https://docs.claude.com/en/docs/claude-code), logged in with your Claude subscription | Every agent runs on it ([SA-002](knowledge/board/standing-authorizations.md)). The engineering prompts assume a large plan; on a smaller one, lower the parallelism in `knowledge/engineering/README.md` ("Pace") | `claude --version` |
-| GitHub CLI, logged in with access to your product repos | Cloning, PRs, CI status | `gh auth status` |
-| Python 3.10+ | The knowledge-base linter, the hooks and the review script use only the standard library | `python3 --version` |
-| poppler (optional) | Lets agents read PDFs | `pdftotext -v` |
+### Что понадобится
 
-Then verify:
+1. Компьютер: macOS 15 или новее (macOS 13 и 14, а также Mac с процессором Intel тоже могут подойти, но без поддержки Homebrew — программы, которая нужна при установке); Windows 10 (версия 2004 или новее) или Windows 11; либо Ubuntu 22.04 или новее. Не меньше 4 ГБ оперативной памяти.
+2. Платный тариф Claude: Pro, Max, Ultra, Team или Enterprise. Учётная запись Console (для разработчиков) тоже подойдёт, но лимита тарифа у неё нет: вы платите за каждое использование, и агенты работают, пока там не кончатся деньги или пока они не достигнут предела расходов (workspace spend limit), который вы задали в Console. Бесплатный тариф claude.ai не включает Claude Code. Чем выше тариф, тем больше агенты успеют сделать до его лимита; как расходовать меньше, написано в [руководстве](docs/guide.md).
+3. Страна, где доступен Claude: в [списке Anthropic](https://www.anthropic.com/supported-countries) есть Кыргызстан, Узбекистан и Казахстан (проверено 2026-11-25).
+4. Бесплатная учётная запись на [github.com](https://github.com): там будет храниться ваша закрытая копия.
+5. Никогда не работали в терминале? Сначала прочитайте [руководство для начинающих](https://code.claude.com/docs/en/terminal-guide) (на английском).
 
-```bash
-python3 -m unittest discover -s scripts/tests   # expect OK
-python3 scripts/kb_lint.py                      # expect 0 errors
-```
+### Что включено по умолчанию
 
-**Always start Claude in this folder.** Claude Code loads the company's settings, hooks, agents and skills only from the folder a session starts in.
+С первого запуска (если пункт начинает действовать только после какого-то вашего шага, в нём это сказано) агенты делают следующее, не спрашивая вас каждый раз. Рядом сказано, как это отключить; там, где написано «скажите CEO», достаточно обычных слов: CEO запишет их и будет им следовать. Команда `/onboard-company` показывает этот же список и для каждого пункта предлагает более строгий вариант. Подробнее: [руководство](docs/guide.md) (на английском).
 
-## First steps
+Всё, что вы пишете, и всё, что читают агенты, отправляется в Anthropic — компанию, которая делает Claude; так он устроен. На тарифах Pro, Max и Ultra на этом обучают модели Anthropic, если в вашей учётной записи включена такая настройка: проверьте её на странице [claude.ai/settings/data-privacy-controls](https://claude.ai/settings/data-privacy-controls). На тарифах Team и Enterprise и с учётной записью Console на этом не обучают, если вы или ваша организация сами не решили отдать эти данные.
 
-1. `claude --agent ceo`, then `/onboard-company`. The CEO interviews you for about 30 minutes: the company, each product, how deploys work today, which accounts agents may use, and how you want reports. It writes your answers into `knowledge/company/` and `knowledge/products/`, and confirms the three default standing authorizations with you.
-2. In a plain `claude` session, add each product to the table in [`CLAUDE.md`](CLAUDE.md) (the CEO gives you the rows).
-3. In the CEO session, run `/onboard-codebase <product-id>` for each product. It runs as the CTO: it clones the repo into `workspaces/` (gitignored) and writes the product's architecture page and a draft deploy runbook. The runbook becomes `active`, and deploys autonomous, only after its steps are verified and you've confirmed how deploys work.
-4. Give the CEO your first directive. It proposes one in its onboarding report.
+1. **Работают, пока не кончится лимит тарифа,** и не замедляются ради экономии. Если в вашей учётной записи Claude выключено платное использование сверх лимита (usage credits), на лимите работа останавливается; если включено, она идёт дальше и стоит вам денег, до месячного предела, который вы задали (если не задали, `Unlimited`, то есть без предела); с учётной записью Console денег стоит каждое использование. На тарифах Pro, Max и Ultra выключить usage credits и задать этот месячный предел можно на странице [claude.ai/settings/usage](https://claude.ai/settings/usage) или командой `/usage-credits`; предел расходов учётной записи Console задают в Console. Отключить: скажите CEO, до какой доли лимита можно работать.
+2. **Выпускают новые версии для пользователей,** когда вы подтвердили, как выпускается продукт, и все проверки пройдены; запускают только основные тесты и те, которых касается изменение. Если после выпуска что-то не так, возвращают прежнюю версию, а вам сообщают потом. Отключить: скажите CEO, чтобы он спрашивал вас перед каждым выпуском или запускал все тесты.
+3. **Начинают среднюю и большую работу,** когда её план прошёл проверку; вы получаете краткое описание. Планы, которые затрагивают список «На что нужно ваше согласие», всё равно ждут вас. Отключить: скажите CEO, что хотите видеть каждый план.
+4. **Читают пароли и ключи самой компании и управляют ими** (файлы `.env`, где программы хранят свои ключи; если вы настроите Vercel — сервис, на котором размещают сайты, — то и значения, которые хранятся там, кроме значений production, то есть сайта, с которым работают ваши пользователи), когда это нужно для задачи. Пароли клиентов под запретом; показывать сами пароли и ключи или отправлять их кому-то, кроме Anthropic (через неё проходит всё, что читает агент) и сервиса, которому принадлежит ключ, тоже запрещено. Это правило, которому агенты следуют, а не технический запрет: ничто не мешает им открыть и другие файлы с ключами на компьютере, в том числе ваши личные (`~/.ssh`, `~/.aws`). Отключить: скажите CEO. Чтобы закрыть эти файлы, в руководстве после такого же списка есть строки для настроек; попросите CEO их добавить.
+5. **Добавляют проверенный код в основную версию продукта и загружают его рабочие копии (ветки) на GitHub** без вопроса в терминале. Если репозиторий продукта открытый, их видят все. Отключить: скажите CEO; он изменит настройки (`.claude/settings.json`, `company.json`) после вашего подтверждения.
+6. **Работают в вашей базе данных Neon** (это сервис, который хранит данные продукта в интернете), если вы её подключите и своими словами скажете CEO, что там можно делать (данные клиентов нужно назвать отдельно): выполняют там команды без вопроса, и эти команды могут менять и удалять данные. В базе, с которой работают ваши пользователи (production), изменить или удалить все строки таблицы без условия, очистить её, удалить таблицу или столбец можно только после свежей резервной копии, но тогда это разрешено; чтобы изменить или удалить строки, выбранные по условию, копия не нужна, даже если это почти все строки или все. Отключить: не подключайте её или скажите CEO, как в пункте 5.
+7. **Повторяют остановленную команду один раз.** Защита — это небольшие программы, которые проверяют команды агентов и останавливают опасные. Когда защита остановила команду и в её сообщении назван разрешённый вид, агент может выполнить её один раз точно в этом виде. Отключить: скажите CEO.
+8. **Пишут вам электронные письма** без дневного предела, когда вы укажете свой адрес, и только на него. Отключить: не указывайте адрес или назовите предел.
+9. **Отправляют код, планы и страницы в OpenAI и Google за вторым мнением, а тексты постов в Google для проверки языка** (проверка языка только при включённом маркетинге и с отдельным ключом). Второе мнение включается, когда вы положите ключи (`OPENAI_API_KEY`, `GEMINI_API_KEY`) туда, куда указывает руководство, но никогда не в разговор, и согласитесь на запись в `company.json`, которую тогда предложит `/onboard-company`; сам по себе ключ ничего не включает. Эти компании берут за это деньги, и предел здесь только сумма на вашем счёте у них; они могут обучать на полученном свой искусственный интеллект. Данные клиентов и пароли отправлять запрещено. Отключить: не соглашайтесь на эту запись, уберите ключ или скажите CEO, чтобы он прекратил; запрет обучения в вашей учётной записи отключает только обучение.
+10. **Не ждут юридических текстов:** формулировки о праве, личных данных и согласии попадают в список для юриста, а работа их не ждёт, даже если клиенты у вас уже есть; до тех пор риск на вас. Цены, условия и новый вид сообщений клиентам по-прежнему требуют вашего согласия. Отключить: скажите CEO, чтобы он сначала решал вопросы с юридическими текстами.
+11. **Пишут черновики ваших мнений для постов в вашей манере,** если вы включите маркетинг: вы их исправляете, и без вашего согласия ничего не публикуется. Отключить: скажите CEO, чтобы он брал только то, что сказали вы сами.
+12. **Не ставят метку Instagram об искусственном интеллекте (ИИ) на посты с картинками или видео, созданными ИИ,** если вы включите маркетинг и не отметите её для этого поста; скрытые пометки «создано ИИ» из загружаемой копии удаляются. Правила Instagram и закон там, где вы живёте, могут требовать эту метку: за это отвечаете вы. Отключить: отмечайте метку на каждом посте.
+13. **Замедляют компьютер:** новая тяжёлая работа ждёт, только когда на каждое ядро процессора приходится около 2,5 задачи, которые выполняются или ждут, или, на Mac, когда свободно меньше 5% памяти. Отключить: назовите CEO более строгий предел.
+14. **Улучшают саму компанию:** меняют её собственных агентов, их инструкции (skills) и её программы (scripts), не спрашивая вас; каждое изменение сначала проходит тесты и проверку другим агентом, а CEO сообщает о нём в отчёте. На изменение, которое ослабляет защиту, расширяет доступ, отправляет наружу больше данных или ослабляет то, что вы сказали, нужно ваше согласие, если только вы сами о нём уже не попросили; настройки (`.claude/settings.json`, `company.json`) меняются только по вашему слову. Отключить: скажите CEO, чтобы он спрашивал вас перед каждым изменением самой компании.
 
-## Use it
+### Установка
 
-```bash
-claude --agent ceo     # operate the company: talk to the CEO
-claude                 # maintain the system itself: agents, skills, hooks, knowledge-base tooling
-claude --agent cto     # escape hatch: talk to the CTO directly
-```
+Выполните часть для своей системы, затем часть «Для всех систем». Вставляйте в терминал по одному блоку команд (Mac: Cmd+V; Ubuntu: Ctrl+Shift+V; окно Ubuntu в Windows: правая кнопка мыши), нажимайте Enter и ждите, пока команды выполнятся. Когда во время установки появится строка `Password:` или `[sudo] password for …` (или такая же на языке вашей системы), введите пароль своего компьютера (в WSL — пароль Ubuntu): при вводе он не виден, так и должно быть. Если спрашивают имя пользователя или пароль GitHub, ничего не вводите: нажмите Ctrl+C и выполните пункт 4 части «Если что-то не работает».
 
-In a CEO session: `/directive <what you want>`, `/report`, `/kb-check`, `/onboard-company`.
+#### macOS
 
-## Layout
+1. Откройте терминал: нажмите Cmd+Пробел, введите `Terminal`, нажмите Enter.
+2. Установите Homebrew — программу, которая устанавливает другие программы. Она попросит ввести пароль и нажать Enter; это может занять время. Вы должны быть администратором этого Mac.
 
-| Path | What |
-|---|---|
-| [`CLAUDE.md`](CLAUDE.md) | The constitution |
-| [`knowledge/`](knowledge/INDEX.md) | The knowledge base: board, company, products, engineering, marketing, sales, research. Conventions in [`knowledge/README.md`](knowledge/README.md); templates in `knowledge/_templates/` |
-| `.claude/agents/` | `executive/` (ceo, analyst) and `engineering/` (cto, staff-engineer, design-reviewer, senior-engineer, code-reviewer) |
-| `.claude/skills/` | onboard-company, onboard-codebase, directive, report, kb-check, marketing-playbook, sales-playbook |
-| `.claude/settings.json` | Permission rules (no force-push, no reading secrets, no admin merges) and the hooks |
-| `scripts/` | `kb_lint.py`, the hooks in `hooks/`, `second_opinion.py`, and their tests |
-| `docs/` | [Optional integrations](docs/optional-integrations.md) and the [design rationale](docs/research/agentic-company-architecture.md) |
-| `workspaces/` | Your product repos, cloned on demand (gitignored) |
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
 
-## Optional integrations
+3. Когда установка закончится, найдите `Next steps`: скопируйте каждую строку, которая начинается с `echo` или `eval`, по одной, вставьте её в терминал и нажмите Enter. Если их нет, идите дальше. Проверка: команда `brew --version` должна показать номер версии; если она отвечает `command not found`, выполните этот шаг ещё раз.
+4. Установите git (он хранит историю изменений файлов), программу GitHub и Python (на нём работают проверки; собственный Python от Apple может быть старее, чем нужно):
 
-[`docs/optional-integrations.md`](docs/optional-integrations.md) explains how to switch on:
-- second opinions on every review from Gemini, GPT and DeepSeek (API keys required, pay-per-token);
-- Claude in Chrome for the CEO;
-- the Neon (Postgres) connector for engineering agents, with a SQL guard;
-- a guard that stops agents from deploying with the Vercel CLI.
+   ```bash
+   brew install git gh python
+   ```
 
-## Make it yours
+#### Windows (WSL 2)
 
-- **Decision rights and standing authorizations** are defaults. Change them in `CLAUDE.md` and [`knowledge/board/standing-authorizations.md`](knowledge/board/standing-authorizations.md).
-- **Models per role** are in each agent's front matter and in the [org chart](knowledge/company/org-chart.md).
-- **Who may spawn whom** is `MAY_SPAWN` in `scripts/hooks/guard_agent_spawn.py`. Don't use `Agent(a, b)` lists in agent definitions: one on a main-session agent binds every subagent too.
-- **Keep your copy private** once it holds your company's facts: the knowledge base records internal decisions and, in time, unfixed security findings about your products.
+В Windows используйте WSL 2: он запускает Ubuntu внутри Windows. Установите компанию в нём, как описано ниже. Пока не запускайте её прямо в Windows: судя по её коду и документации Claude Code, её защита там не может запуститься, а команды, выполняемые через PowerShell, могут пройти мимо защиты. Что нужно изменить, описано в [docs/windows.md](docs/windows.md) (на английском); вы можете сказать CEO из WSL 2 или с Mac: «Сделай так, чтобы компания работала прямо в Windows, по docs/windows.md». Держите папку компании на собственном диске Ubuntu (в домашней папке), а не в `/mnt/c`. В WSL Claude Code не умеет работать с Chrome, поэтому агент, который следит за трендами, и браузерный инструмент CEO там не работают, как и запланированные задания (часть «Каждый день»). Board desk (вопросы и ответы в Notion) в Ubuntu и WSL тоже не работает, даже вручную: его ключ хранится в «Связке ключей» Mac. Не настраивайте его там; отвечайте CEO в терминале.
 
-## License
+1. Нажмите «Пуск», введите `PowerShell` (это программа Windows для ввода команд), нажмите на неё правой кнопкой мыши, выберите «Запуск от имени администратора» и ответьте «Да».
+2. Введите команду:
 
-MIT. See [LICENSE](LICENSE).
+   ```powershell
+   wsl --install
+   ```
+
+   Если вместо установки появилась справка, введите `wsl --list --online`, а затем `wsl --install -d Ubuntu`. Если установка стоит на 0.0%, введите `wsl --install --web-download -d Ubuntu`. Если в ошибке говорится о виртуализации, её нужно включить в настройках BIOS компьютера. Подробнее: [страница Microsoft](https://learn.microsoft.com/en-us/windows/wsl/install) (на английском).
+
+3. Перезагрузите компьютер.
+4. Откройте Ubuntu из меню «Пуск» (она может открыться сама). Придумайте имя пользователя (маленькими латинскими буквами, без пробелов) и пароль. Проверьте в PowerShell: команда `wsl -l -v` должна показать у Ubuntu VERSION 2; если там 1, введите `wsl --set-version Ubuntu 2`.
+5. Дальше вводите все команды в окне Ubuntu, а не в PowerShell. Переходите к части «Ubuntu и WSL».
+
+#### Ubuntu и WSL
+
+Откройте терминал: в Ubuntu нажмите Ctrl+Alt+T, в Windows это окно Ubuntu.
+
+1. Установите git (он хранит историю изменений файлов), curl (он скачивает файлы) и Python (на нём работают проверки):
+
+   ```bash
+   sudo apt update && sudo apt install -y git curl python3
+   ```
+
+2. Установите программу GitHub ([источник](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)). Скопируйте весь блок целиком:
+
+   ```bash
+   (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+     && sudo mkdir -p -m 755 /etc/apt/keyrings \
+     && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+     && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+     && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+     && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+     && sudo apt update \
+     && sudo apt install gh -y
+   ```
+
+#### Для всех систем
+
+1. Проверьте версию Python: нужна 3.10 или новее.
+
+   ```bash
+   python3 --version
+   ```
+
+2. Установите Claude Code:
+
+   ```bash
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+   Если под словами `Setup notes:` сказано, что `~/.local/bin` нет в PATH, на Mac введите эту строку:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+   ```
+
+   А в Ubuntu и WSL — эту:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+   ```
+
+3. Откройте новый терминал и проверьте: нужна версия 2.1.295 или новее. Если она старее, введите `claude update`. Команда `claude doctor` не должна показать ошибок; чтобы выйти из неё, нажмите Enter или Esc.
+
+   ```bash
+   claude --version
+   claude doctor
+   ```
+
+4. Войдите в GitHub: выберите GitHub.com, затем HTTPS, на вопрос про Git ответьте Yes и войдите через браузер. Если появится одноразовый код, скопируйте его и нажмите Enter. Если браузер не открылся (WSL), откройте [github.com/login/device](https://github.com/login/device) сами и введите код. В конце будет написано `Logged in as` и ваше имя.
+
+   ```bash
+   gh auth login
+   ```
+
+5. Сообщите программе git своё имя и почту: наберите эти две строки, указав в кавычках своё имя и почту своей учётной записи GitHub; кавычки оставьте прямыми. Ошиблись? Наберите строку ещё раз.
+
+   ```bash
+   git config --global user.name "YOUR NAME"
+   git config --global user.email "YOUR EMAIL"
+   ```
+
+### Ваша закрытая копия
+
+Репозиторий — это папка с файлами и историей их изменений на GitHub. Не нажимайте Fork: копия открытого репозитория, сделанная этой кнопкой, остаётся открытой.
+
+1. Создайте в своей учётной записи GitHub пустой закрытый репозиторий. Команда покажет его адрес.
+
+   ```bash
+   gh repo create my-company --private
+   ```
+
+2. Скачайте систему в папку `my-company`.
+
+   ```bash
+   cd ~
+   git clone https://github.com/azretkenzhaliev/agentic-company-core.git my-company
+   cd my-company
+   ```
+
+3. Задайте два адреса: `core` — откуда приходят обновления (туда ничего не отправится), `origin` — ваша закрытая копия. Вставьте весь блок. Всё получилось, если в одной из последних строк написано `main -> main`.
+
+   ```bash
+   git remote rename origin core
+   git remote set-url --push core no-push
+   git remote add origin "$(gh repo view my-company --json url --jq .url).git"
+   git push -u origin main
+   ```
+
+   Если команда `git push` не прошла, наберите эти две строки, указав вместо YOUR-GITHUB-NAME своё имя в GitHub:
+
+   ```bash
+   git remote set-url origin https://github.com/YOUR-GITHUB-NAME/my-company.git
+   git push -u origin main
+   ```
+
+### Проверка
+
+1. В терминале, в папке компании (`cd ~/my-company`), запустите тесты. Несколько минут будут появляться точки. Последняя строка должна начинаться с `OK`. Если это не так, смотрите пункт 3 части «Если что-то не работает»; если не помогло, переходите к части «Первый запуск» и покажите CEO последние 20 строк.
+
+   ```bash
+   python3 -m unittest discover -s scripts/tests
+   ```
+
+2. В той же папке проверьте страницы. В конце должно быть `0 errors`. Если это не так, переходите к части «Первый запуск» и покажите CEO последние 20 строк.
+
+   ```bash
+   python3 scripts/kb_lint.py
+   ```
+
+3. Убедитесь, что копия закрытая. Ответ должен быть `PRIVATE`. Если он `PUBLIC`, введите `gh repo edit my-company --visibility private --accept-visibility-change-consequences` и проверьте ещё раз.
+
+   ```bash
+   gh repo view my-company --json visibility --jq .visibility
+   ```
+
+### Первый запуск
+
+1. Перейдите в папку и запустите Claude Code:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. В первый раз Claude Code спросит о цветах (нажмите Enter), а потом о способе входа: выберите учётную запись Claude с подпиской; с вариантом Console вы платите за каждое использование. Откроется браузер: войдите с учётной записью, на которую оформлен ваш тариф Claude. Если в WSL браузер не открылся, нажмите латинскую `c`, откройте ссылку в Windows и вставьте код.
+3. Claude Code спросит, доверяете ли вы этой папке. Согласитесь: тогда загрузятся правила и защита компании. Появится строка для ввода: напишите «привет», и CEO ответит.
+4. Всегда запускайте `claude` в этой папке: только здесь вы говорите с CEO.
+
+### Первые шаги
+
+Команды, которые начинаются с `/`, вводят внутри Claude Code, после его запуска.
+
+1. Расскажите о компании. CEO будет задавать вопросы около 45 минут; отвечайте на своём языке, можно говорить «пропустить» и «позже».
+
+   ```text
+   /onboard-company
+   ```
+
+2. Для каждого продукта, у которого уже есть код: замените `my-product` на имя, выбранное в шаге 1. Если у CEO ещё нет имени или адреса продукта, сначала скажите ему: «Мой продукт называется …, его код находится …» (адрес или папка). Агент изучит код и запишет, как он устроен и как его выпускают.
+
+   ```text
+   /onboard-codebase my-product
+   ```
+
+3. Дайте первое поручение: после слова `/directive` напишите простыми словами, на своём языке, чего хотите. Обычное сообщение без этого слова тоже подойдёт. Например («Сделай одностраничный сайт для моей пекарни»):
+
+   ```text
+   /directive Make a one-page site for my bakery
+   ```
+
+### Каждый день
+
+Агенты работают, только пока Claude Code открыт и компьютер не спит. Исключение — запланированные задания: ежечасные записи в Notion и чтение ваших ответов там (Board desk), письма о низком заряде батареи, постановка в расписание постов, которые вы одобрили, и ночная копия файлов маркетинга. Сами они не запускаются: каждому нужна его запись в `company.json`, о которой Claude Code спросит вас, и его команда установки, а установить их можно только на Mac; на других системах Board desk не работает и вручную, поэтому не настраивайте его. Все, кроме ночной копии, расходуют лимит вашего тарифа.
+
+1. Начать работу:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Узнать, как идут дела:
+
+   ```text
+   /report
+   ```
+
+3. Поручить новое: `/directive` и дальше ваши слова.
+4. Закончить:
+
+   ```text
+   /exit
+   ```
+
+5. В следующий раз продолжить последний разговор:
+
+   ```bash
+   cd ~/my-company
+   claude -c
+   ```
+
+6. Время от времени обновлять Claude Code, в терминале, после `/exit`:
+
+   ```bash
+   claude update
+   ```
+
+7. Когда лимит тарифа исчерпан, агенты останавливаются (если не включены usage credits: пункт 1 части «Что включено по умолчанию»), а их записи остаются на страницах. Когда лимит обновится, вернитесь и напишите «продолжай».
+
+### На что нужно ваше согласие
+
+1. Всегда, кроме того, что разрешает список «Что включено по умолчанию»: новые продукты и закрытие продуктов; деньги сверх постоянного разрешения или бюджета, который вы задали, и любой новый платный сервис; юридические обязательства и договоры; публичные заявления от вашего имени (посты, утверждения на сайте, реклама; но не обычные тексты на экранах продукта); отправка чего угодно за пределы компании; регистрации и новые учётные записи; наём людей; постоянные разрешения агентам; данные клиентов или пользователей, если они уходят кому-то новому, используются или хранятся сверх того, на что люди согласились, или могут быть безвозвратно потеряны или раскрыты; что продукт делает с данными или системами действующего клиента сверх одобренного вами (перемещает, скрывает или удаляет их, пропускает задержанное, снижает защиту); кто получает доступ к данным клиентов; обещания клиентам (цены, условия, новый вид сообщений им); внешний вид бренда и продукта; то, что можете знать только вы; то, что противоречит вашим прежним словам; и ослабление защиты, которая ограничивает агентов.
+2. Ещё план средней или большой работы, который затрагивает этот список, и всё, что вы сами сделали строже в `/onboard-company`.
+3. Сам Claude Code тоже может спросить в терминале, прежде чем агент выполнит команду. Прочитайте её; если непонятно, откажите и спросите CEO.
+4. Всё остальное агенты решают сами и сообщают в отчёте, с указанием, как это отменить.
+
+### Обновления системы
+
+1. Проще всего поручить это CEO. Если обновление меняет настройки защиты, он покажет вам изменения и попросит выполнить шаги ниже вручную.
+
+   ```text
+   /directive Update us to the latest core
+   ```
+
+2. Или вручную, закрыв CEO (`/exit`):
+
+   ```bash
+   cd ~/my-company
+   git fetch core && git switch -C core-update main && git merge --no-edit core/main
+   python3 -m unittest discover -s scripts/tests
+   python3 scripts/kb_lint.py
+   ```
+
+3. Если git сообщил о конфликте (CONFLICT) или проверка не прошла, вернитесь назад и расскажите CEO, что произошло (без конфликта первая команда сообщит об ошибке, это нормально):
+
+   ```bash
+   git merge --abort
+   git switch main
+   ```
+
+4. Если обе проверки прошли, посмотрите, что меняется в защите ([руководство](docs/guide.md), «Pull later core updates»), и примите обновление:
+
+   ```bash
+   git switch main
+   git merge core-update
+   git push
+   ```
+
+5. Скажите CEO, что вы обновили систему вручную: иначе он примет изменения за чужие и отменит их.
+
+### Держите копию закрытой
+
+1. Не делайте репозиторий открытым и не отправляйте его в другие места: в нём ваши решения, а со временем и слабые места ваших продуктов.
+2. Не пишите пароли и ключи ни в разговоре, ни на страницах: говорите только, где они хранятся.
+3. Проверить, что копия закрытая, можно в любой момент: шаг 3 части «Проверка».
+
+### Если что-то не работает
+
+1. `claude: command not found`. Откройте новый терминал; в Windows вводите команду в окне Ubuntu, а не в PowerShell. Не помогло — введите строку с PATH из шага 2 части «Для всех систем» и откройте новый терминал.
+2. Claude Code не пускает после входа. Проверьте тариф: бесплатный не подходит.
+3. Тесты не заканчиваются на `OK`. Проверьте `python3 --version`: нужна 3.10 или новее. На macOS повторите `brew install python` и откройте новый терминал; Ubuntu нужна 22.04 или новее.
+4. GitHub не принимает `git push` или `gh`. Войдите заново:
+
+   ```bash
+   gh auth login
+   gh auth setup-git
+   ```
+
+5. Отвечает не CEO или команда `/onboard-company` неизвестна. Вы в другой папке или не согласились доверять этой. Введите `/exit` и запустите снова:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+6. Установка Claude Code заканчивается строкой `syntax error near unexpected token '<'`. Возможно, Claude недоступен там, где вы находитесь (пункт 3 части «Что понадобится»), или его блокирует сеть.
+
+Если тексты на разных языках расходятся, решающим считается английский.
+
+<a id="ky"></a>
+
+## Кыргызча
+
+### Бул эмне
+
+Бул — Claude Code программасынын ичинде жасалма интеллект агенттери жүргүзгөн компания. Claude Code терминалда (буйруктар жазылуучу терезеде) иштейт. Сиз негиздөөчүсүз, агенттер сизди **Board** (директорлор кеңеши) деп аташат: эмнени каалаганыңызды жөнөкөй сөз менен айтасыз жана **CEO** деген агент менен гана сүйлөшөсүз. CEO ишти башка агенттерге (инженерлерге, текшерүүчүлөргө, изилдөөчүгө жана, эгер ишке киргизсеңиз, маркетинг бөлүмүнө) бөлүп берет, сизден сиз чечүүчү нерселерди гана сурайт жана баарын тексттик барактар турган папкада сактайт. Толугураак: [колдонмо](docs/guide.md) (англис тилинде). Лицензия: [MIT](LICENSE).
+
+### Эмнелер керек
+
+1. Компьютер: macOS 15 же андан жаңы (macOS 13 жана 14, ошондой эле Intel процессорлуу Mac да жарашы мүмкүн, бирок орнотууда колдонулуучу Homebrew программасынын колдоосу жок); Windows 10 (2004 версиясы же андан жаңы) же Windows 11; же Ubuntu 22.04 же андан жаңы. Оперативдүү эс тутуму 4 гигабайттан кем эмес.
+2. Акылуу Claude тарифи: Pro, Max, Ultra, Team же Enterprise. Console (иштеп чыгуучулар үчүн) аккаунту да жарайт, бирок анын тариф лимити жок: ар бир колдонуу үчүн төлөйсүз, агенттер ал жердеги акча түгөнгөнчө же Console'до өзүңүз койгон чыгым чегине (workspace spend limit) жеткенче иштей берет. claude.ai сайтынын акысыз тарифине Claude Code кирбейт. Тариф канчалык чоң болсо, агенттер лимитке жеткенче ошончолук көп иш бүтүрөт; азыраак сарптоонун жолу [колдонмодо](docs/guide.md) жазылган.
+3. Claude жеткиликтүү өлкө: [Anthropic тизмесинде](https://www.anthropic.com/supported-countries) Кыргызстан, Өзбекстан жана Казакстан бар (2026-11-25 күнү текшерилди).
+4. [github.com](https://github.com) сайтында акысыз аккаунт: жабык көчүрмөңүз ошол жерде сакталат.
+5. Терминалда мурда иштеп көргөн эмессизби? Адегенде [жаңы баштагандар үчүн колдонмону](https://code.claude.com/docs/en/terminal-guide) окуп чыгыңыз (англис тилинде).
+
+### Демейки боюнча эмнелер ишке киргизилген
+
+Биринчи жолу иштеткенден тартып (сиздин кайсы бир аракетиңизден кийин башталган пункттарда бул айтылган) агенттер төмөнкүлөрдү сизден ар жолу сурабай жасайт. Ар биринин жанында аны кантип өчүрүү айтылган; «CEO'го айтыңыз» деп жазылган жерде жөнөкөй сөз жетиштүү: CEO аны жазып алып, ошого ылайык иштейт. `/onboard-company` буйругу ушул эле тизмени көрсөтүп, ар бири үчүн катуураак тандоону сунуштайт. Толугураак: [колдонмо](docs/guide.md) (англис тилинде).
+
+Сиз жазгандын баары жана агенттер окугандын баары Claude'ду жасаган Anthropic компаниясына жөнөтүлөт; ал ушундай иштейт. Pro, Max жана Ultra тарифтеринде, аккаунтуңузда ошондой жөндөө күйгүзүлгөн болсо, Anthropic өз моделдерин ушулар менен окутат: аны [claude.ai/settings/data-privacy-controls](https://claude.ai/settings/data-privacy-controls) барагынан текшериңиз. Team жана Enterprise тарифтеринде жана Console аккаунтунда, сиз же уюмуңуз маалыматты окутууга берүүнү өзүңүздөр чечпесеңиздер, Anthropic өз моделдерин аны менен окутпайт.
+
+1. **Тарифтин лимити бүткөнчө иштешет,** үнөмдөө үчүн ишти жайлатышпайт. Claude аккаунтуңузда лимиттен ашык акылуу колдонуу (usage credits) өчүрүлгөн болсо, иш лимитке жеткенде токтойт; күйгүзүлгөн болсо, лимиттен ары уланып, сиз койгон айлык чекке чейин (чек койбосоңуз, `Unlimited`, башкача айтканда чексиз) сизден акча кетет; Console аккаунтунда ар бир колдонууга акча кетет. Pro, Max жана Ultra тарифтеринде лимиттен ашык колдонууну [claude.ai/settings/usage](https://claude.ai/settings/usage) барагында же `/usage-credits` буйругу менен өчүрөсүз жана айлык чекти коёсуз; Console аккаунтунун чыгым чеги Console'до коюлат. Өчүрүү: лимиттин кайсы бөлүгүнө чейин иштөө керектигин CEO'го айтыңыз.
+2. **Колдонуучулар үчүн жаңы версияларды чыгарышат,** продукт кантип чыгарыларын сиз ырастап, бардык текшерүүлөр ийгиликтүү өткөндөн кийин; негизги тесттерди жана өзгөртүү тийген тесттерди гана иштетишет. Чыгаргандан кийин бир нерсе туура эмес болсо, мурунку версияны кайтарып, сизге кийин айтышат. Өчүрүү: ар бир чыгаруунун алдында сизден сурасын же бардык тесттерди иштетсин деп CEO'го айтыңыз.
+3. **Орто жана чоң ишти башташат,** анын планы текшерүүдөн өткөндөн кийин; сиз кыскача баяндама аласыз. «Кайсы иштерге сиздин макулдугуңуз керек» деген тизмеге тиешелүү пландар баары бир сизди күтөт. Өчүрүү: ар бир планды көргүңүз келерин CEO'го айтыңыз.
+4. **Компаниянын өзүнүн сырсөздөрүн жана ачкычтарын окуп, башкарышат** (программалар өз ачкычтарын сактаган `.env` файлдары; эгер сайттар жайгаштырылуучу Vercel кызматын жөндөсөңүз, ал жерде сакталган маанилер да, колдонуучуларыңыз пайдаланган сайттын (production) маанилеринен башкасы), иш талап кылганда. Кардарлардын сырсөздөрүнө тийүүгө болбойт; сырсөздүн же ачкычтын өзүн көрсөтүүгө же аны Anthropic'тен (агент окугандын баары ал аркылуу өтөт) жана ал ачкыч таандык болгон кызматтан башкага жөнөтүүгө да тыюу салынган. Бул агенттер сактаган эреже, техникалык тосмо эмес: компьютердеги башка ачкыч файлдарын, анын ичинде сиздин жеке файлдарыңызды (`~/.ssh`, `~/.aws`) ачууга да эч нерсе тоскоол болбойт. Өчүрүү: CEO'го айтыңыз. Ошол файлдарды агенттер ача албашы үчүн жөндөөлөргө кошулуучу саптар колдонмодо, ушул тизменин ал жердеги көчүрмөсүнөн кийин берилген; аларды кошууну CEO'дон сураныңыз.
+5. **Текшерилген кодду продукттун негизги версиясына кошуп, анын жумушчу көчүрмөлөрүн (бутактарды) GitHub'га жүктөшөт,** терминалда сурабай. Продукттун репозиторийи ачык болсо, аларды баары көрөт. Өчүрүү: CEO'го айтыңыз; сиз ырастагандан кийин ал жөндөөлөрдү (`.claude/settings.json`, `company.json`) өзгөртөт.
+6. **Neon маалымат базаңызда иштешет** (бул — продукттун маалыматын интернетте сактаган кызмат), эгер аны туташтырып, ал жерде эмне кылууга болорун CEO'го өз сөзүңүз менен айтсаңыз (кардарлардын маалыматын өзүнчө атоо керек): ал жерде буйруктарды сурабай аткарышат, ал буйруктар маалыматты өзгөртө да, өчүрө да алат. Колдонуучуларыңыз пайдаланган (production) базада таблицанын бардык саптарын шартсыз өзгөртүү же өчүрүү, аны бошотуу, таблицаны же мамычаны жок кылуу жаңы камдык көчүрмөдөн кийин гана мүмкүн, бирок көчүрмө алынгандан кийин буга уруксат берилет; шарт менен тандалган саптарды өзгөртүүгө же өчүрүүгө көчүрмө керек эмес, алар дээрлик бардык саптар же баары болсо да. Өчүрүү: аны туташтырбаңыз же 5-пунктта айтылгандай CEO'го айтыңыз.
+7. **Токтотулган буйрукту бир жолу кайталашат.** Коргоо — агенттердин буйруктарын текшерип, кооптууларын токтоткон чакан программалар. Коргоо буйрукту токтотуп, анын билдирүүсүндө уруксат берилген түрү аталса, агент буйрукту бир жолу дал ошол түрдө аткара алат. Өчүрүү: CEO'го айтыңыз.
+8. **Сизге электрондук кат жазышат,** күндүк чеги жок, электрондук дарегиңизди бергенден кийин жана ошол дарекке гана. Өчүрүү: дарегиңизди бербеңиз же чегин айтыңыз.
+9. **Экинчи пикир алуу үчүн кодду, пландарды жана барактарды OpenAI менен Google'га, ал эми тилин текшерүү үчүн посттордун тексттерин Google'га жөнөтүшөт** (тил текшерүү маркетинг ишке киргенде жана өзүнчө ачкыч менен гана). Экинчи пикир сиз ачкычтарды (`OPENAI_API_KEY`, `GEMINI_API_KEY`) колдонмодо көрсөтүлгөн жерге (аларды сүйлөшүүгө эч качан жазбаңыз) коюп, ошондо `/onboard-company` сунуштаган `company.json` файлындагы жазууга макул болгондон кийин ишке кирет; ачкычтын өзү эле эч нерсени баштабайт. Бул компаниялар ал үчүн акча алат, чеги алардагы эсебиңиздеги акча гана; алган нерсеси менен өз жасалма интеллектин окутушу мүмкүн. Кардарлардын маалыматын жана сырсөздөрдү жөнөтүүгө тыюу салынган. Өчүрүү: ал жазууга макул болбоңуз, ачкычты алып салыңыз же токтотсун деп CEO'го айтыңыз; аккаунтуңузда окутууга тыюу салуу окутууну гана өчүрөт.
+10. **Юридикалык тексттерди күтүшпөйт:** мыйзам, жеке маалымат жана макулдук тууралуу тексттер юрист үчүн тизмеге жазылат, ал эми иш аларды күтпөйт, кардарларыңыз бар болсо да; ага чейин тобокелдик сизде. Баалар, шарттар жана кардарларга жөнөтүлүүчү билдирүүлөрдүн жаңы түрү мурдагыдай эле сиздин макулдугуңузду талап кылат. Өчүрүү: адегенде юридикалык тексттерди бүтүрсүн деп CEO'го айтыңыз.
+11. **Посттор үчүн сиздин пикириңизди сиз сүйлөгөндөй кылып алдын ала жазып коюшат,** эгер маркетингди ишке киргизсеңиз: сиз оңдойсуз, макулдугуңузсуз эч нерсе жарыяланбайт. Өчүрүү: өзүңүз айткандарды гана колдонсун деп CEO'го айтыңыз.
+12. **Жасалма интеллект (ЖИ) жасаган сүрөтү же видеосу бар постторго Instagram'дын ЖИ белгисин коюшпайт,** эгер маркетингди ишке киргизсеңиз жана ошол пост үчүн белгини өзүңүз койбосоңуз; «ЖИ жасаган» деген жашыруун белгилер жүктөлүүчү көчүрмөдөн алынып салынат. Instagram'дын эрежелери жана сиз жашаган жердин мыйзамы бул белгини талап кылышы мүмкүн: бул сиздин жоопкерчилигиңиз. Өчүрүү: белгини ар бир постко коюңуз.
+13. **Компьютерди жайлатышат:** жаңы оор иш процессордун ар бир өзөгүнө иштеп жаткан же күтүп турган болжол менен 2,5 иш туура келгенде же, Mac'та, эс тутумдун 5 пайызынан азы бош калганда гана күтөт. Өчүрүү: CEO'го катуураак чекти айтыңыз.
+14. **Компаниянын өзүн жакшыртышат:** анын өз агенттерин, алардын нускамаларын (skills) жана компаниянын программаларын (scripts) сизден сурабай өзгөртүшөт; ар бир өзгөртүү адегенде тесттерден жана башка агенттин текшерүүсүнөн өтөт, ал тууралуу CEO отчётто айтат. Коргоону бошоңдоткон, кирүү укугун кеңейткен, сыртка көбүрөөк маалымат жөнөткөн же сиз айтканды алсыраткан өзгөртүүгө, эгер аны өзүңүз мурда сурабаган болсоңуз, макулдугуңуз керек; жөндөөлөр (`.claude/settings.json`, `company.json`) сиздин сөзүңүз менен гана өзгөртүлөт. Өчүрүү: компаниянын өзүндөгү ар бир өзгөртүүдөн мурун сизден сурасын деп CEO'го айтыңыз.
+
+### Орнотуу
+
+Адегенде өз системаңыздын бөлүгүн, андан кийин «Бардык системалар үчүн» бөлүгүн аткарыңыз. Терминалга буйруктардын блокторун бирден коюп (Mac: Cmd+V; Ubuntu: Ctrl+Shift+V; Windows'тогу Ubuntu терезеси: чычкандын оң баскычы), Enter басыңыз да, буйруктар аткарылып бүткөнчө күтүңүз. Орнотуу учурунда `Password:` же `[sudo] password for …` деген сап (же системаңыздын тилиндеги ушундай сап) чыкса, компьютериңиздин сырсөзүн (WSL'де — Ubuntu сырсөзүн) жазыңыз: жазып жатканда ал көрүнбөйт, бул кадимки көрүнүш. GitHub'дагы атыңызды же сырсөзүңүздү сураса, эч нерсе жазбаңыз: Ctrl+C басып, «Бир нерсе иштебесе» бөлүгүнүн 4-пунктун аткарыңыз.
+
+#### macOS
+
+1. Терминалды ачыңыз: Cmd+Space басып, `Terminal` деп жазып, Enter басыңыз.
+2. Homebrew программасын орнотуңуз, ал башка программаларды орнотот. Ал сырсөзүңүздү жана Enter басууну сурайт, бир топ убакыт алышы мүмкүн; сиз бул Mac'тын администратору болушуңуз керек.
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+3. Орнотуу бүткөндө `Next steps` дегенди табыңыз: `echo` же `eval` деп башталган ар бир сапты бирден көчүрүп, терминалга коюп, Enter басыңыз. Андай саптар жок болсо, уланта бериңиз. Текшерүү: `brew --version` версиянын номерин көрсөтүшү керек; `command not found` десе, бул кадамды кайталаңыз.
+4. git (файлдардын өзгөрүү тарыхын сактайт), GitHub жана Python (текшерүүлөр ушунда иштейт) программаларын орнотуңуз (Apple компаниясынын өз Python'у керектүүсүнөн эски болушу мүмкүн):
+
+   ```bash
+   brew install git gh python
+   ```
+
+#### Windows (WSL 2)
+
+Windows'то WSL 2 колдонуңуз: ал Windows ичинде Ubuntu'ну иштетет. Компанияны төмөндө көрсөтүлгөндөй ошол жерге орнотуңуз. Азырынча аны түз эле Windows'тун өзүндө иштетпеңиз: анын кодуна жана Claude Code'дун документтерине караганда, анын коргоосу ал жерде иштей албайт, ал эми PowerShell аркылуу берилген буйруктар коргоосуз эле өтүп кетиши мүмкүн. Эмнени өзгөртүү керектиги [docs/windows.md](docs/windows.md) барагында (англис тилинде); WSL 2'ден же Mac'тан CEO'го мындай десеңиз болот: «docs/windows.md боюнча компания түз эле Windows'то иштегендей кыл». Компаниянын папкасын Ubuntu'нун өз дискинде (үй папкаңызда) сактаңыз, `/mnt/c` ичинде эмес. WSL'де Claude Code Chrome менен иштей албайт, ошондуктан тренддерге көз салып турган агент жана CEO'нун браузер куралы ал жерде иштебейт, белгиленген убакытта өзү иштей турган жумуштар да («Күн сайын» бөлүгү) иштебейт. Board desk (Notion'догу суроолор жана жооптор) да Ubuntu'да жана WSL'де иштебейт, кол менен да: анын ачкычы Mac'тын Keychain деген ачкыч сактагычында турат. Аны ал жерде орнотпоңуз; CEO'го терминалда жооп бериңиз.
+
+1. Start («Пуск») баскычын басып, `PowerShell` деп жазыңыз (бул — Windows'тун буйруктар жазылуучу программасы), аны чычкандын оң баскычы менен басып, «Run as administrator» («Запуск от имени администратора») дегенди тандап, Yes («Да») деп жооп бериңиз.
+2. Бул буйрукту жазыңыз:
+
+   ```powershell
+   wsl --install
+   ```
+
+   Орнотуунун ордуна жардам тексти чыкса, `wsl --list --online`, андан кийин `wsl --install -d Ubuntu` деп жазыңыз. Орнотуу 0.0% дегенде туруп калса, `wsl --install --web-download -d Ubuntu` деп жазыңыз. Катада виртуалдаштыруу (virtualization) жөнүндө айтылса, аны компьютердин BIOS жөндөөлөрүнөн күйгүзүү керек. Толугураак: [Microsoft барагы](https://learn.microsoft.com/en-us/windows/wsl/install) (англис тилинде).
+
+3. Компьютерди кайра жүктөңүз.
+4. Start («Пуск») менюсунан Ubuntu'ну ачыңыз (ал өзү ачылышы да мүмкүн). Колдонуучунун атын (кичине латын тамгалары менен, боштуксуз) жана сырсөз ойлоп табыңыз. PowerShell'де текшериңиз: `wsl -l -v` Ubuntu үчүн VERSION 2 деп көрсөтүшү керек; 1 болсо, `wsl --set-version Ubuntu 2` деп жазыңыз.
+5. Мындан ары бардык буйруктарды PowerShell'ге эмес, Ubuntu терезесине жазыңыз. «Ubuntu жана WSL» бөлүгүнө өтүңүз.
+
+#### Ubuntu жана WSL
+
+Терминалды ачыңыз: Ubuntu'да Ctrl+Alt+T басыңыз, Windows'то бул — Ubuntu терезеси.
+
+1. git (файлдардын өзгөрүү тарыхын сактайт), curl (файлдарды жүктөйт) жана Python (текшерүүлөр ушунда иштейт) программаларын орнотуңуз:
+
+   ```bash
+   sudo apt update && sudo apt install -y git curl python3
+   ```
+
+2. GitHub программасын орнотуңуз ([булак](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)). Блокту толугу менен көчүрүңүз:
+
+   ```bash
+   (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+     && sudo mkdir -p -m 755 /etc/apt/keyrings \
+     && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+     && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+     && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+     && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+     && sudo apt update \
+     && sudo apt install gh -y
+   ```
+
+#### Бардык системалар үчүн
+
+1. Python версиясын текшериңиз: 3.10 же андан жаңы керек.
+
+   ```bash
+   python3 --version
+   ```
+
+2. Claude Code программасын орнотуңуз:
+
+   ```bash
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+   Эгер `Setup notes:` дегендин астында `~/.local/bin` PATH'та жок деп жазылса, Mac'та бул сапты жазыңыз:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+   ```
+
+   Ubuntu'да жана WSL'де — муну:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+   ```
+
+3. Жаңы терминал ачып, текшериңиз: 2.1.295 же андан жаңы версия керек. Эски болсо, `claude update` деп жазыңыз. `claude doctor` эч кандай ката көрсөтпөшү керек; андан чыгуу үчүн Enter же Esc басыңыз.
+
+   ```bash
+   claude --version
+   claude doctor
+   ```
+
+4. GitHub аккаунтуңузга кириңиз: GitHub.com'ду, андан кийин HTTPS'ти тандаңыз, Git жөнүндөгү суроого Yes деп жооп берип, браузер аркылуу кириңиз. Бир жолку код чыкса, аны көчүрүп, Enter басыңыз. Браузер ачылбаса (WSL), [github.com/login/device](https://github.com/login/device) барагын өзүңүз ачып, кодду жазыңыз. Аягында `Logged in as` жана атыңыз чыгат.
+
+   ```bash
+   gh auth login
+   ```
+
+5. git программасына атыңызды жана электрондук дарегиңизди айтыңыз: тырмакчанын ичине өз атыңызды жана GitHub аккаунтуңуздун электрондук дарегин коюп, бул эки сапты жазыңыз; тырмакчалар түз бойдон калсын. Жаңылдыңызбы? Сапты кайра жазыңыз.
+
+   ```bash
+   git config --global user.name "YOUR NAME"
+   git config --global user.email "YOUR EMAIL"
+   ```
+
+### Сиздин жабык көчүрмөңүз
+
+Репозиторий — GitHub'дагы файлдар жана алардын өзгөрүү тарыхы сакталган папка. Fork баскычын баспаңыз: ачык репозиторийдин ушул баскыч менен жасалган көчүрмөсү ачык бойдон калат.
+
+1. Аккаунтуңузда бош жабык репозиторий түзүңүз. Буйрук анын дарегин көрсөтөт.
+
+   ```bash
+   gh repo create my-company --private
+   ```
+
+2. Системаны `my-company` папкасына жүктөп алыңыз.
+
+   ```bash
+   cd ~
+   git clone https://github.com/azretkenzhaliev/agentic-company-core.git my-company
+   cd my-company
+   ```
+
+3. Эки дарек коюңуз: `core` — жаңыртуулар келүүчү жер (ал жакка эч нерсе жөнөтүлбөйт), `origin` — сиздин жабык көчүрмөңүз. Блокту толугу менен коюңуз. Акыркы саптардын биринде `main -> main` деп жазылса, баары туура болду.
+
+   ```bash
+   git remote rename origin core
+   git remote set-url --push core no-push
+   git remote add origin "$(gh repo view my-company --json url --jq .url).git"
+   git push -u origin main
+   ```
+
+   `git push` ишке ашпаса, YOUR-GITHUB-NAME дегендин ордуна GitHub'дагы атыңызды коюп, бул эки сапты жазыңыз:
+
+   ```bash
+   git remote set-url origin https://github.com/YOUR-GITHUB-NAME/my-company.git
+   git push -u origin main
+   ```
+
+### Текшерүү
+
+1. Терминалда, компаниянын папкасында (`cd ~/my-company`), тесттерди иштетиңиз. Бир нече мүнөт чекиттер чыгып турат. Акыркы сап `OK` деп башталышы керек. Андай болбосо, «Бир нерсе иштебесе» бөлүгүнүн 3-пунктун караңыз; ошондо да болбосо, «Биринчи жолу иштетүү» бөлүгүнө өтүп, акыркы 20 сапты CEO'го көрсөтүңүз.
+
+   ```bash
+   python3 -m unittest discover -s scripts/tests
+   ```
+
+2. Ошол эле папкада барактарды текшериңиз. Аягында `0 errors` турушу керек. Андай болбосо, «Биринчи жолу иштетүү» бөлүгүнө өтүп, акыркы 20 сапты CEO'го көрсөтүңүз.
+
+   ```bash
+   python3 scripts/kb_lint.py
+   ```
+
+3. Көчүрмөңүз жабык экенин текшериңиз. Жооп `PRIVATE` болушу керек. `PUBLIC` болсо, `gh repo edit my-company --visibility private --accept-visibility-change-consequences` деп жазып, кайра текшериңиз.
+
+   ```bash
+   gh repo view my-company --json visibility --jq .visibility
+   ```
+
+### Биринчи жолу иштетүү
+
+1. Папкага өтүп, Claude Code программасын иштетиңиз:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Биринчи жолу Claude Code түстөр жөнүндө (Enter басыңыз), андан кийин кантип кирүү жөнүндө сурайт: жазылуусу (subscription) бар Claude аккаунтун тандаңыз; Console тандалса, ар бир колдонуу үчүн төлөйсүз. Браузер ачылат: Claude тарифиңиз бар аккаунт менен кириңиз. WSL'де браузер ачылбаса, латын тамгасындагы `c` баскычын басыңыз, шилтемени Windows'то ачып, кодду коюңуз.
+3. Claude Code бул папкага ишенесизби деп сурайт. Макул болуңуз: ошондо компаниянын эрежелери жана коргоосу жүктөлөт. Жазуу үчүн сап чыгат: «салам» деп жазыңыз, CEO жооп берет.
+4. `claude` буйругун дайыма ушул папкада иштетиңиз: CEO менен ушул жерде гана сүйлөшөсүз.
+
+### Алгачкы кадамдар
+
+`/` белгиси менен башталган буйруктар Claude Code ишке киргенден кийин, анын ичинде жазылат.
+
+1. CEO'го компанияңыз жөнүндө айтып бериңиз. Ал болжол менен 45 мүнөт суроо берет; өз тилиңизде жооп бериңиз, «өткөрүп жибер» же «кийин» десеңиз да болот.
+
+   ```text
+   /onboard-company
+   ```
+
+2. Коду бар ар бир продукт үчүн: `my-product` дегенди 1-кадамда тандалган атка алмаштырыңыз. CEO анын атын же дарегин али билбесе, адегенде ага айтыңыз: «Менин продуктум … деп аталат, анын коду … жеринде» (дарек же папка). Агент кодду изилдеп, анын түзүлүшүн жана кантип чыгарыларын жазып коёт.
+
+   ```text
+   /onboard-codebase my-product
+   ```
+
+3. Биринчи тапшырмаңызды бериңиз: `/directive` сөзүнөн кийин эмнени каалаганыңызды жөнөкөй сөз менен, өз тилиңизде жазыңыз. Бул сөз кошулбаган жөнөкөй билдирүү да жарайт. Мисалы («Наабайканам үчүн бир барактан турган сайт жаса»):
+
+   ```text
+   /directive Make a one-page site for my bakery
+   ```
+
+### Күн сайын
+
+Агенттер Claude Code ачык турганда жана компьютер уктабай турганда гана иштейт. Белгиленген убакытта өзү иштей турган жумуштар мындан тышкары: саат сайын Notion'го жазуу калтыруу жана ал жерден сиздин жоопторуңузду окуу (Board desk), батареянын заряды аз калганы жөнүндө электрондук каттар, сиз жактырган посттордун чыгуу убактысын коюу жана маркетинг файлдарынын түнкү көчүрмөсү. Алардын бири да сиз орнотмоюнча ишке кирбейт: ар бирине `company.json` файлындагы өз жазуусу (аны Claude Code сизден сурайт) жана өз орнотуу буйругу керек, алар Mac'та гана орнотулат; башка системада Board desk кол менен да иштебейт, ошондуктан аны орнотпоңуз. Түнкү көчүрмөдөн башкасынын баары тарифиңиздин лимитин сарптайт.
+
+1. Ишти баштоо:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Иштин абалын билүү:
+
+   ```text
+   /report
+   ```
+
+3. Жаңы иш тапшыруу: `/directive`, андан кийин өз сөзүңүз.
+4. Бүтүрүү:
+
+   ```text
+   /exit
+   ```
+
+5. Кийинки жолу акыркы сүйлөшүүнү улантуу:
+
+   ```bash
+   cd ~/my-company
+   claude -c
+   ```
+
+6. Claude Code программасын маал-маалы менен жаңыртуу, терминалда, `/exit` дегенден кийин:
+
+   ```bash
+   claude update
+   ```
+
+7. Тарифтин лимити бүткөндө агенттер токтойт (usage credits күйгүзүлгөн болбосо: «Демейки боюнча эмнелер ишке киргизилген» бөлүгүнүн 1-пункту), алардын жазгандары барактарда калат. Лимит жаңырганда кайтып келип, «улант» деп жазыңыз.
+
+### Кайсы иштерге сиздин макулдугуңуз керек
+
+1. «Демейки боюнча эмнелер ишке киргизилген» тизмеси уруксат бергендерди эсепке албаганда, төмөнкүлөргө дайыма макулдугуңуз керек: жаңы продукт баштоо же продуктту жабуу; туруктуу уруксаттан же сиз койгон бюджеттен ашкан акча жана ар бир жаңы акылуу кызмат; юридикалык милдеттенмелер жана келишимдер; сиздин атыңыздан ачык билдирүүлөр (посттор, сайтта компания же продукт жөнүндө айтылгандар, жарнама; продукттун экрандарындагы кадимки тексттер эмес); компаниядан сыртка бир нерсе жөнөтүү; катталуулар жана жаңы аккаунттар; адам жалдоо; агенттерге туруктуу уруксат берүү; кардарлардын же колдонуучулардын маалыматын жаңы бирөөгө берүү, алар макул болгондон тышкары колдонуу же сактоо, биротоло жоголуп же ачыкка чыгып кетүү коркунучуна кептөө; продукт учурдагы кардардын маалыматы же системалары менен сиз жактыргандан тышкары эмне кылары (жылдыруу, жашыруу, өчүрүү же кармалганын коё берүү, коргоону төмөндөтүү); кардарлардын маалыматына ким кире алары; кардарларга убада берүү (баалар, шарттар, аларга билдирүүлөрдүн жаңы түрү); бренддин жана продукттун көрүнүшү; сиз гана биле турган нерселер; мурда айтканыңызга каршы келген нерселер; жана агенттердин коргоосун бошоңдотуу.
+2. Дагы: ушул тизмеге тиешелүү орто же чоң иштин планы жана `/onboard-company` учурунда өзүңүз катуулаткан нерселер.
+3. Claude Code өзү да агент буйрук аткарардан мурун терминалда сурашы мүмкүн. Аны окуңуз; түшүнүксүз болсо, уруксат бербей, CEO'дон сураңыз.
+4. Калганын агенттер өздөрү чечип, отчётто айтышат, кантип жокко чыгарууну да жазышат.
+
+### Системаны жаңыртуу
+
+1. Эң оңою — CEO'го тапшыруу. Жаңыртуу коргоонун жөндөөлөрүн өзгөртсө, CEO сизге өзгөрүүлөрдү көрсөтүп, төмөнкү кадамдарды өзүңүз аткарууну суранат.
+
+   ```text
+   /directive Update us to the latest core
+   ```
+
+2. Же CEO'ну жаап (`/exit`), колуңуз менен:
+
+   ```bash
+   cd ~/my-company
+   git fetch core && git switch -C core-update main && git merge --no-edit core/main
+   python3 -m unittest discover -s scripts/tests
+   python3 scripts/kb_lint.py
+   ```
+
+3. git конфликт (CONFLICT) жөнүндө айтса же текшерүү ийгиликсиз болсо, артка кайтып, эмне болгонун CEO'го айтыңыз (конфликт болбосо, биринчи буйрук ката жөнүндө айтат, бул кадимки көрүнүш):
+
+   ```bash
+   git merge --abort
+   git switch main
+   ```
+
+4. Эки текшерүү тең ийгиликтүү өтсө, коргоодо эмне өзгөрөрүн карап чыгып ([колдонмо](docs/guide.md), «Pull later core updates»), жаңыртууну кабыл алыңыз:
+
+   ```bash
+   git switch main
+   git merge core-update
+   git push
+   ```
+
+5. Системаны колуңуз менен жаңыртканыңызды CEO'го айтыңыз: болбосо ал өзгөрүүлөрдү бөтөндүкү деп ойлоп, жокко чыгарат.
+
+### Көчүрмөңүздү жабык сактаңыз
+
+1. Репозиторийди ачык кылбаңыз жана башка жакка жөнөтпөңүз: анда сиздин чечимдериңиз, убакыт өткөн сайын продуктуларыңыздын алсыз жерлери да жазылат.
+2. Сырсөздөрдү жана ачкычтарды сүйлөшүүгө да, барактарга да жазбаңыз: кайда сакталганын гана айтыңыз.
+3. Көчүрмө жабык экенин каалаган убакта текшере аласыз: «Текшерүү» бөлүгүнүн 3-кадамы.
+
+### Бир нерсе иштебесе
+
+1. `claude: command not found`. Жаңы терминал ачыңыз; Windows'то буйрукту PowerShell'ге эмес, Ubuntu терезесине жазыңыз. Жардам бербесе, «Бардык системалар үчүн» бөлүгүнүн 2-кадамындагы PATH сабын жазып, жаңы терминал ачыңыз.
+2. Аккаунтуңузга киргенден кийин да Claude Code иштөөгө уруксат бербесе, тарифиңизди текшериңиз: акысыз тариф жарабайт.
+3. Тесттер `OK` менен бүтпөсө, `python3 --version` буйругу менен текшериңиз: 3.10 же андан жаңы керек. macOS'то `brew install python` буйругун кайталап, жаңы терминал ачыңыз; Ubuntu 22.04 же андан жаңы болушу керек.
+4. GitHub `git push` же `gh` буйругун кабыл албаса, кайра кириңиз:
+
+   ```bash
+   gh auth login
+   gh auth setup-git
+   ```
+
+5. CEO эмес, башкасы жооп берсе же `/onboard-company` буйругу белгисиз болсо, сиз башка папкадасыз же бул папкага ишенүүгө макул болгон эмессиз. `/exit` деп жазып, кайра иштетиңиз:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+6. Claude Code программасын орнотуу `syntax error near unexpected token '<'` деген сап менен бүтсө, Claude сиз турган жерде жеткиликтүү эмес болушу мүмкүн («Эмнелер керек» бөлүгүнүн 3-пункту) же аны тармак тосуп жатат.
+
+Ар башка тилдердеги тексттер бири-биринен айырмаланса, англис тилиндегиси чечүүчү болот.
+
+<a id="uz"></a>
+
+## Oʻzbekcha
+
+### Bu nima
+
+Bu — Claude Code dasturi ichida sunʼiy intellekt agentlari yuritadigan kompaniya. Claude Code terminalda (buyruqlar yoziladigan oynada) ishlaydi. Siz asoschisiz, agentlar sizni **Board** (direktorlar kengashi) deb ataydi: nima xohlashingizni oddiy soʻzlar bilan aytasiz va faqat **CEO** degan agent bilan gaplashasiz. CEO ishni boshqa agentlarga (muhandislarga, tekshiruvchilarga, tadqiqotchiga va, agar ishga tushirsangiz, marketing boʻlimiga) boʻlib beradi, faqat siz hal qiladigan narsalar haqida sizdan soʻraydi va hammasini matnli sahifalar papkasida saqlaydi. Batafsil: [qoʻllanma](docs/guide.md) (ingliz tilida). Litsenziya: [MIT](LICENSE).
+
+### Nimalar kerak
+
+1. Kompyuter: macOS 15 yoki undan yangi (macOS 13 va 14, shuningdek Intel protsessorli Mac ham toʻgʻri kelishi mumkin, lekin oʻrnatishda ishlatiladigan Homebrew dasturi ularni qoʻllab-quvvatlamaydi); Windows 10 (2004-versiya yoki undan yangi) yoki Windows 11; yoxud Ubuntu 22.04 yoki undan yangi. Operativ xotirasi kamida 4 GB.
+2. Pullik Claude tarifi: Pro, Max, Ultra, Team yoki Enterprise. Console (dasturchilar uchun) hisobi ham toʻgʻri keladi, lekin unda tarif limiti yoʻq: har bir foydalanish uchun toʻlaysiz va agentlar u yerdagi pul tugaguncha yoki Consoleda oʻzingiz qoʻygan xarajat chegarasiga (workspace spend limit) yetguncha ishlayveradi. claude.ai saytining bepul tarifiga Claude Code kirmaydi. Tarif qancha katta boʻlsa, agentlar limitga yetguncha shuncha koʻp ish bajaradi; kamroq sarflash yoʻli [qoʻllanmada](docs/guide.md) yozilgan.
+3. Claude ishlaydigan mamlakat: [Anthropic roʻyxatida](https://www.anthropic.com/supported-countries) Qirgʻiziston, Oʻzbekiston va Qozogʻiston bor (2026-11-25 kuni tekshirildi).
+4. [github.com](https://github.com) saytida bepul hisob: yopiq nusxangiz oʻsha yerda saqlanadi.
+5. Terminalda hech ishlamaganmisiz? Avval [yangi boshlovchilar uchun qoʻllanmani](https://code.claude.com/docs/en/terminal-guide) oʻqib chiqing (ingliz tilida).
+
+### Boshidanoq nimalar yoqilgan
+
+Birinchi marta ishga tushirganingizdan boshlab (sizning biror harakatingizdan keyin boshlanadigan bandlarda bu aytilgan) agentlar quyidagilarni har safar sizdan soʻramasdan qiladi. Har birining yonida uni qanday oʻchirish aytilgan; «CEOga ayting» deyilgan joyda oddiy soʻzlar yetarli: CEO ularni yozib oladi va shunga koʻra ishlaydi. `/onboard-company` buyrugʻi xuddi shu roʻyxatni koʻrsatadi va har biri uchun qatʼiyroq variantni taklif qiladi. Batafsil: [qoʻllanma](docs/guide.md) (ingliz tilida).
+
+Siz yozgan hamma narsa va agentlar oʻqigan hamma narsa Claudeni yaratgan Anthropic kompaniyasiga yuboriladi; u shunday ishlaydi. Pro, Max va Ultra tariflarida, hisobingizda shunday sozlama yoqilgan boʻlsa, Anthropic oʻz modellarini shular bilan oʻqitadi: buni [claude.ai/settings/data-privacy-controls](https://claude.ai/settings/data-privacy-controls) sahifasida tekshiring. Team va Enterprise tariflarida hamda Console hisobida Anthropic oʻz modellarini bu maʼlumotlar bilan oʻqitmaydi, siz yoki tashkilotingiz ularni oʻqitish uchun berishga qaror qilgan holat bundan mustasno.
+
+1. **Tarif limiti tugaguncha ishlaydi,** tejash uchun sekinlashmaydi. Claude hisobingizda limitdan ortiq pullik foydalanish (usage credits) oʻchirilgan boʻlsa, ish limitga yetganda toʻxtaydi; yoqilgan boʻlsa, limitdan keyin ham davom etadi va siz qoʻygan oylik chegaragacha (chegara qoʻymagan boʻlsangiz, `Unlimited`, yaʼni cheksiz) pulingiz sarflanadi; Console hisobida har bir foydalanishga pul sarflanadi. Pro, Max va Ultra tariflarida usage creditsni [claude.ai/settings/usage](https://claude.ai/settings/usage) sahifasida yoki `/usage-credits` buyrugʻi bilan oʻchirasiz va oʻsha oylik chegarani qoʻyasiz; Console hisobining xarajat chegarasi Consoleda qoʻyiladi. Oʻchirish: limitning qaysi qismigacha ishlash kerakligini CEOga ayting.
+2. **Foydalanuvchilar uchun yangi versiyalarni chiqaradi,** mahsulot qanday chiqarilishini siz tasdiqlaganingizdan va barcha tekshiruvlar muvaffaqiyatli oʻtganidan keyin; faqat asosiy testlarni va oʻzgarish tegadigan testlarni ishga tushiradi. Chiqargandan keyin biror narsa notoʻgʻri boʻlsa, avvalgi versiyani qaytaradi va sizga keyin aytadi. Oʻchirish: har bir chiqarishdan oldin sizdan soʻrasin yoki barcha testlarni ishga tushirsin deb CEOga ayting.
+3. **Oʻrta va katta ishni boshlaydi,** uning rejasi tekshiruvdan oʻtgandan keyin; siz qisqacha bayon olasiz. «Qaysi ishlar uchun roziligingiz kerak» roʻyxatiga tegadigan rejalar baribir sizni kutadi. Oʻchirish: har bir rejani koʻrmoqchi ekaningizni CEOga ayting.
+4. **Kompaniyaning oʻz parollari va kalitlarini oʻqiydi va boshqaradi** (dasturlar oʻz kalitlarini saqlaydigan `.env` fayllari; agar saytlar joylashtiriladigan Vercel xizmatini sozlasangiz, u yerda saqlanadigan qiymatlar ham, foydalanuvchilaringiz ishlatadigan sayt (production) qiymatlaridan tashqari), ish talab qilganda. Mijozlarning parollariga tegish taqiqlangan; har qanday parol yoki kalitning oʻzini koʻrsatish yoki uni Anthropicdan (agent oʻqigan hamma narsa u orqali oʻtadi) va kalit tegishli boʻlgan xizmatdan boshqasiga yuborish ham taqiqlangan. Bu agentlar amal qiladigan qoida, texnik toʻsiq emas: kompyuterdagi boshqa kalit fayllarini, shu jumladan shaxsiy kalit fayllaringizni (`~/.ssh`, `~/.aws`) ochishga ham hech narsa toʻsqinlik qilmaydi. Oʻchirish: CEOga ayting. Agentlar bu fayllarni ocha olmasligi uchun sozlamalarga qoʻshiladigan qatorlar qoʻllanmada, shu roʻyxatning oʻsha yerdagi nusxasidan keyin berilgan; ularni qoʻshishni CEOdan soʻrang.
+5. **Tekshirilgan kodni mahsulotning asosiy versiyasiga qoʻshadi va uning ishchi nusxalarini (branch) GitHubga yuklaydi,** terminalda soʻramasdan. Mahsulot repozitoriysi ochiq boʻlsa, ularni hamma koʻradi. Oʻchirish: CEOga ayting; siz tasdiqlaganingizdan keyin u sozlamalarni (`.claude/settings.json`, `company.json`) oʻzgartiradi.
+6. **Neon maʼlumotlar bazangizda ishlaydi** (bu — mahsulot maʼlumotlarini internetda saqlaydigan xizmat), agar uni ulab, u yerda nima qilish mumkinligini CEOga oʻz soʻzingiz bilan aytsangiz (mijozlar maʼlumotlari bilan ishlashga ruxsatni alohida aytish kerak): u yerda buyruqlarni soʻramasdan bajaradi, bu buyruqlar maʼlumotni oʻzgartirishi ham, oʻchirishi ham mumkin. Foydalanuvchilar ishlatadigan (production) bazada jadvalning hamma qatorini shartsiz oʻzgartirish yoki oʻchirish, uni boʻshatish, jadval yoki ustunni yoʻq qilish faqat yangi zaxira nusxadan keyin mumkin, lekin nusxa olingach, bunga ruxsat bor; shart bilan tanlangan qatorlarni oʻzgartirish yoki oʻchirish uchun nusxa kerak emas, ular deyarli hamma qatorlar yoki hammasi boʻlsa ham. Oʻchirish: uni ulamang yoki 5-bandda aytilganidek CEOga ayting.
+7. **Toʻxtatilgan buyruqni bir marta takrorlaydi.** Himoya — agentlarning buyruqlarini tekshirib, xavflilarini toʻxtatadigan kichik dasturlar. Himoya buyruqni toʻxtatsa va uning xabarida ruxsat etilgan koʻrinish aytilsa, agent buyruqni bir marta aynan oʻsha koʻrinishda bajarishi mumkin. Oʻchirish: CEOga ayting.
+8. **Sizga elektron xat yozadi,** kunlik chegarasiz, elektron pochta manzilingizni berganingizdan keyin va faqat shu manzilga. Oʻchirish: manzilingizni bermang yoki chegarani ayting.
+9. **Ikkinchi fikr olish uchun kod, rejalar va sahifalarni OpenAI va Googlega, postlar matnini esa tilini tekshirish uchun Googlega yuboradi** (til tekshiruvi faqat marketing ishga tushganda va alohida kalit bilan). Ikkinchi fikr siz kalitlarni (`OPENAI_API_KEY`, `GEMINI_API_KEY`) qoʻllanmada koʻrsatilgan joyga (ularni hech qachon suhbatga yozmang) qoʻyib, shunda `/onboard-company` taklif qiladigan `company.json` faylidagi yozuvga rozi boʻlganingizdan keyin ishga tushadi; kalitning oʻzi hech narsani boshlamaydi. Bu kompaniyalar buning uchun pul oladi, chegarasi faqat ulardagi hisobingizdagi pul; olgan narsasi bilan oʻz sunʼiy intellektini oʻqitishi mumkin. Mijozlar maʼlumotlari va parollarni yuborish taqiqlangan. Oʻchirish: u yozuvga rozi boʻlmang, kalitni olib tashlang yoki toʻxtatsin deb CEOga ayting; hisobingizda oʻqitishni taqiqlash faqat oʻqitishni oʻchiradi.
+10. **Yuridik matnlarni kutmaydi:** qonun, shaxsiy maʼlumotlar va rozilik haqidagi matnlar yurist uchun roʻyxatga yoziladi, ish esa ularni kutmaydi, mijozlaringiz boʻlsa ham; ungacha xavf sizning zimmangizda. Narxlar, shartlar va mijozlarga yuboriladigan xabarlarning yangi turi uchun sizning roziligingiz baribir kerak. Oʻchirish: avval yuridik matnlar masalasini hal qilsin deb CEOga ayting.
+11. **Postlar uchun fikringizning qoralamasini oʻzingiz gapirgandek yozadi,** agar marketingni ishga tushirsangiz: siz tuzatasiz, roziligingizsiz hech narsa eʼlon qilinmaydi. Oʻchirish: faqat oʻzingiz aytganlarni ishlatsin deb CEOga ayting.
+12. **Sunʼiy intellekt (SI) yaratgan rasmi yoki videosi bor postlarga Instagramning SI belgisini qoʻymaydi,** agar marketingni ishga tushirsangiz va shu post uchun belgini oʻzingiz qoʻymasangiz; «SI yaratgan» degan yashirin belgilar yuklanadigan nusxadan olib tashlanadi. Instagram qoidalari va siz yashaydigan joy qonuni bu belgini talab qilishi mumkin: bu sizning javobgarligingiz. Oʻchirish: belgini har bir postga qoʻying.
+13. **Kompyuterni sekinlashtiradi:** yangi ogʻir ish faqat protsessorning har bir yadrosiga bajarilayotgan yoki kutayotgan taxminan 2,5 ta vazifa toʻgʻri kelganda yoki, Macda, boʻsh xotira 5% dan kam qolganda kutadi. Oʻchirish: CEOga qatʼiyroq chegarani ayting.
+14. **Kompaniyaning oʻzini yaxshilaydi:** uning oʻz agentlarini, ularning koʻrsatmalarini (skills) va kompaniyaning dasturlarini (scripts) sizdan soʻramasdan oʻzgartiradi; har bir oʻzgarish avval testlardan va boshqa agentning tekshiruvidan oʻtadi, bu haqda CEO hisobotda aytadi. Himoyani boʻshashtiradigan, kirish huquqini kengaytiradigan, tashqariga koʻproq maʼlumot yuboradigan yoki siz aytganlarni zaiflashtiradigan oʻzgarish uchun, agar uni oʻzingiz avval soʻramagan boʻlsangiz, roziligingiz kerak; sozlamalar (`.claude/settings.json`, `company.json`) faqat sizning soʻzingiz bilan oʻzgartiriladi. Oʻchirish: kompaniyaning oʻzidagi har bir oʻzgarishdan oldin sizdan soʻrasin deb CEOga ayting.
+
+### Oʻrnatish
+
+Avval oʻz tizimingizga oid qismni, keyin «Barcha tizimlar uchun» qismini bajaring. Terminalga har safar bitta buyruqlar blokini qoʻying (Mac: Cmd+V; Ubuntu: Ctrl+Shift+V; Windowsdagi Ubuntu oynasi: sichqonchaning oʻng tugmasi), Enter tugmasini bosing va buyruqlar bajarilib boʻlguncha kuting. Oʻrnatish paytida `Password:` yoki `[sudo] password for …` qatori (yoki tizimingiz tilidagi shunday qator) chiqsa, kompyuteringiz parolini (WSLda — Ubuntu parolini) yozing: yozayotganda u koʻrinmaydi, bu odatiy hol. GitHubdagi nomingiz yoki parolingiz soʻralsa, hech narsa yozmang: Ctrl+C tugmalarini bosing va «Biror narsa ishlamasa» qismining 4-bandini bajaring.
+
+#### macOS
+
+1. Terminalni oching: Cmd+Space tugmalarini bosib, `Terminal` deb yozing va Enter tugmasini bosing.
+2. Homebrew dasturini oʻrnating, u boshqa dasturlarni oʻrnatadi. U parolingizni va Enter tugmasini bosishni soʻraydi, ancha vaqt olishi mumkin; siz bu Macning administratori boʻlishingiz kerak.
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+3. Oʻrnatish tugagach, `Next steps` degan joyni toping: `echo` yoki `eval` bilan boshlanadigan har bir qatorni bittadan nusxalang, terminalga qoʻying va Enter tugmasini bosing. Bunday qatorlar boʻlmasa, davom eting. Tekshirish: `brew --version` versiya raqamini koʻrsatishi kerak; `command not found` desa, shu qadamni takrorlang.
+4. git (fayllarning oʻzgarish tarixini saqlaydi), GitHub va Python (tekshiruvlar shunda ishlaydi) dasturlarini oʻrnating (Apple kompaniyasining oʻz Python dasturi kerakligidan eskiroq boʻlishi mumkin):
+
+   ```bash
+   brew install git gh python
+   ```
+
+#### Windows (WSL 2)
+
+Windowsda WSL 2 tizimidan foydalaning: u Windows ichida Ubuntuni ishga tushiradi. Kompaniyani quyida koʻrsatilganidek oʻsha yerga oʻrnating. Hozircha uni bevosita Windowsning oʻzida ishga tushirmang: uning kodi va Claude Code hujjatlariga koʻra, himoyasi u yerda ishga tusha olmaydi, PowerShell orqali bajarilgan buyruqlar esa himoyani chetlab oʻtishi mumkin. Nimani oʻzgartirish kerakligi [docs/windows.md](docs/windows.md) sahifasida (ingliz tilida); WSL 2 yoki Macdan CEOga shunday deyishingiz mumkin: «docs/windows.md boʻyicha kompaniyani bevosita Windowsda ishlaydigan qil». Kompaniya papkasini Ubuntuning oʻz diskida (uy papkangizda) saqlang, `/mnt/c` ichida emas. WSLda Claude Code Chrome bilan ishlay olmaydi, shuning uchun trendlarni kuzatuvchi agent va CEOning brauzer vositasi u yerda ishlamaydi, rejalashtirilgan topshiriqlar ham ishlamaydi («Har kuni» qismi). Board desk (Notiondagi savol-javoblar) ham Ubuntu va WSLda ishlamaydi, qoʻlda ham: uning kaliti Macning Keychain deb ataladigan kalitlar omborida saqlanadi. Uni u yerda sozlamang; CEOga terminalda javob bering.
+
+1. Start tugmasini bosib, `PowerShell` deb yozing (bu — Windowsning buyruqlar yoziladigan dasturi), uni sichqonchaning oʻng tugmasi bilan bosing, «Run as administrator» (administrator sifatida ishga tushirish) bandini tanlang va Yes deb javob bering.
+2. Bu buyruqni yozing:
+
+   ```powershell
+   wsl --install
+   ```
+
+   Oʻrnatish oʻrniga yordam matni chiqsa, `wsl --list --online`, keyin `wsl --install -d Ubuntu` deb yozing. Oʻrnatish 0.0% da toʻxtab qolsa, `wsl --install --web-download -d Ubuntu` deb yozing. Xatoda virtualizatsiya (virtualization) haqida aytilsa, uni kompyuterning BIOS sozlamalarida yoqish kerak. Batafsil: [Microsoft sahifasi](https://learn.microsoft.com/en-us/windows/wsl/install) (ingliz tilida).
+
+3. Kompyuterni qayta ishga tushiring.
+4. Start menyusidan Ubuntuni oching (u oʻzi ochilishi ham mumkin). Foydalanuvchi nomi (kichik lotin harflari bilan, boʻshliqsiz) va parol oʻylab toping. PowerShellda tekshiring: `wsl -l -v` Ubuntu uchun VERSION 2 deb koʻrsatishi kerak; 1 boʻlsa, `wsl --set-version Ubuntu 2` deb yozing.
+5. Bundan keyin barcha buyruqlarni PowerShellga emas, Ubuntu oynasiga yozing. «Ubuntu va WSL» qismiga oʻting.
+
+#### Ubuntu va WSL
+
+Terminalni oching: Ubuntuda Ctrl+Alt+T tugmalarini bosing, Windowsda bu — Ubuntu oynasi.
+
+1. git (fayllarning oʻzgarish tarixini saqlaydi), curl (fayllarni yuklab oladi) va Python (tekshiruvlar shunda ishlaydi) dasturlarini oʻrnating:
+
+   ```bash
+   sudo apt update && sudo apt install -y git curl python3
+   ```
+
+2. GitHub dasturini oʻrnating ([manba](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)). Blokni toʻliq nusxalang:
+
+   ```bash
+   (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+     && sudo mkdir -p -m 755 /etc/apt/keyrings \
+     && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+     && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+     && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+     && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+     && sudo apt update \
+     && sudo apt install gh -y
+   ```
+
+#### Barcha tizimlar uchun
+
+1. Python versiyasini tekshiring: 3.10 yoki undan yangisi kerak.
+
+   ```bash
+   python3 --version
+   ```
+
+2. Claude Code dasturini oʻrnating:
+
+   ```bash
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+   Agar `Setup notes:` ostida `~/.local/bin` PATHda yoʻq deyilsa, Macda shu qatorni yozing:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+   ```
+
+   Ubuntu va WSLda esa mana buni:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+   ```
+
+3. Yangi terminal ochib, tekshiring: 2.1.295 yoki undan yangi versiya kerak. Eski boʻlsa, `claude update` deb yozing. `claude doctor` hech qanday xato koʻrsatmasligi kerak; undan chiqish uchun Enter yoki Esc tugmasini bosing.
+
+   ```bash
+   claude --version
+   claude doctor
+   ```
+
+4. GitHub hisobingizga kiring: GitHub.com, keyin HTTPSni tanlang, Git haqidagi savolga Yes deb javob bering va brauzer orqali kiring. Bir martalik kod chiqsa, uni nusxalab, Enter tugmasini bosing. Brauzer ochilmasa (WSL), [github.com/login/device](https://github.com/login/device) sahifasini oʻzingiz oching va kodni yozing. Oxirida `Logged in as` va nomingiz chiqadi.
+
+   ```bash
+   gh auth login
+   ```
+
+5. git dasturiga ismingiz va elektron pochtangizni ayting: qoʻshtirnoq ichiga oʻz ismingiz va GitHub hisobingizning elektron pochtasini yozib, shu ikki qatorni tering; toʻgʻri qoʻshtirnoqlarni (") boshqa turiga almashtirmang. Xato qildingizmi? Qatorni qaytadan yozing.
+
+   ```bash
+   git config --global user.name "YOUR NAME"
+   git config --global user.email "YOUR EMAIL"
+   ```
+
+### Sizning yopiq nusxangiz
+
+Repozitoriy — GitHubdagi fayllar va ularning oʻzgarish tarixi saqlanadigan papka. Fork tugmasini bosmang: ochiq repozitoriyning shu tugma bilan olingan nusxasi ochiqligicha qoladi.
+
+1. Hisobingizda boʻsh yopiq repozitoriy yarating. Buyruq uning manzilini koʻrsatadi.
+
+   ```bash
+   gh repo create my-company --private
+   ```
+
+2. Tizimni `my-company` papkasiga yuklab oling.
+
+   ```bash
+   cd ~
+   git clone https://github.com/azretkenzhaliev/agentic-company-core.git my-company
+   cd my-company
+   ```
+
+3. Ikkita manzil belgilang: `core` — yangilanishlar keladigan joy (u yerga hech narsa yuborilmaydi), `origin` — sizning yopiq nusxangiz. Blokni toʻliq qoʻying. Oxirgi qatorlardan birida `main -> main` deb yozilsa, hammasi joyida.
+
+   ```bash
+   git remote rename origin core
+   git remote set-url --push core no-push
+   git remote add origin "$(gh repo view my-company --json url --jq .url).git"
+   git push -u origin main
+   ```
+
+   `git push` bajarilmasa, YOUR-GITHUB-NAME oʻrniga GitHubdagi nomingizni qoʻyib, shu ikki qatorni yozing:
+
+   ```bash
+   git remote set-url origin https://github.com/YOUR-GITHUB-NAME/my-company.git
+   git push -u origin main
+   ```
+
+### Tekshirish
+
+1. Terminalda, kompaniya papkasida (`cd ~/my-company`), testlarni ishga tushiring. Bir necha daqiqa nuqtalar chiqib turadi. Oxirgi qator `OK` bilan boshlanishi kerak. Unday boʻlmasa, «Biror narsa ishlamasa» qismining 3-bandiga qarang; shunda ham boʻlmasa, «Birinchi marta ishga tushirish» qismiga oʻting va oxirgi 20 qatorni CEOga koʻrsating.
+
+   ```bash
+   python3 -m unittest discover -s scripts/tests
+   ```
+
+2. Oʻsha papkada sahifalarni tekshiring. Oxirida `0 errors` boʻlishi kerak. Unday boʻlmasa, «Birinchi marta ishga tushirish» qismiga oʻting va oxirgi 20 qatorni CEOga koʻrsating.
+
+   ```bash
+   python3 scripts/kb_lint.py
+   ```
+
+3. Nusxangiz yopiq ekanini tekshiring. Javob `PRIVATE` boʻlishi kerak. `PUBLIC` boʻlsa, `gh repo edit my-company --visibility private --accept-visibility-change-consequences` deb yozib, qaytadan tekshiring.
+
+   ```bash
+   gh repo view my-company --json visibility --jq .visibility
+   ```
+
+### Birinchi marta ishga tushirish
+
+1. Papkaga oʻtib, Claude Code dasturini ishga tushiring:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Birinchi marta Claude Code ranglar haqida (Enter tugmasini bosing), keyin qanday kirish haqida soʻraydi: obunasi (subscription) bor Claude hisobini tanlang; Console tanlansa, har bir foydalanish uchun toʻlaysiz. Brauzer ochiladi: Claude tarifingiz bor hisob bilan kiring. WSLda brauzer ochilmasa, `c` tugmasini bosing, havolani Windowsda oching va kodni qoʻying.
+3. Claude Code bu papkaga ishonasizmi, deb soʻraydi. Rozi boʻling: shunda kompaniyaning qoidalari va himoyasi yuklanadi. Yozish uchun qator chiqadi: «salom» deb yozing, CEO javob beradi.
+4. `claude` buyrugʻini doim shu papkada ishga tushiring: CEO bilan faqat shu yerda gaplashasiz.
+
+### Dastlabki qadamlar
+
+`/` belgisi bilan boshlanadigan buyruqlar Claude Code ishga tushgach, uning ichida yoziladi.
+
+1. Kompaniyangiz haqida CEOga soʻzlab bering. U taxminan 45 daqiqa savol beradi; oʻz tilingizda javob bering, «oʻtkazib yubor» yoki «keyinroq» desangiz ham boʻladi.
+
+   ```text
+   /onboard-company
+   ```
+
+2. Kodi bor har bir mahsulot uchun: `my-product` oʻrniga 1-qadamda tanlangan nomni yozing. CEO uning nomini yoki manzilini hali bilmasa, avval unga ayting: «Mahsulotim … deb ataladi, kodi shu yerda: …» (manzil yoki papka). Agent kodni oʻrganib, uning tuzilishini va qanday chiqarilishini yozib qoʻyadi.
+
+   ```text
+   /onboard-codebase my-product
+   ```
+
+3. Birinchi topshirigʻingizni bering: `/directive` soʻzidan keyin nima xohlashingizni oddiy soʻzlar bilan, oʻz tilingizda yozing. Bu soʻzni yozmasdan, oddiy xabar yuborsangiz ham boʻladi. Masalan («Novvoyxonam uchun bir sahifali sayt yasa»):
+
+   ```text
+   /directive Make a one-page site for my bakery
+   ```
+
+### Har kuni
+
+Agentlar faqat Claude Code ochiq va kompyuter uyqu rejimida boʻlmaganda ishlaydi. Rejalashtirilgan topshiriqlar bundan mustasno: har soatda Notionga yozuv qoldirish va u yerdan javoblaringizni oʻqish (Board desk), batareya quvvati kam qolgani haqida elektron xatlar, siz maʼqullagan postlarning chiqish vaqtini belgilash va marketing fayllarining tungi nusxasi. Ularning hech biri oʻz-oʻzidan boshlanmaydi: har biriga `company.json` faylidagi oʻz yozuvi (u haqda Claude Code sizdan soʻraydi) va oʻz oʻrnatish buyrugʻi kerak, ular faqat Macda oʻrnatiladi; boshqa tizimlarda Board desk qoʻlda ham ishlamaydi, shuning uchun uni sozlamang. Tungi nusxadan boshqa hammasi tarifingiz limitini sarflaydi.
+
+1. Ishni boshlash:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Ishlar qanday ketayotganini bilish:
+
+   ```text
+   /report
+   ```
+
+3. Yangi ish topshirish: `/directive`, keyin oʻz soʻzlaringiz.
+4. Tugatish:
+
+   ```text
+   /exit
+   ```
+
+5. Keyingi safar oxirgi suhbatni davom ettirish:
+
+   ```bash
+   cd ~/my-company
+   claude -c
+   ```
+
+6. Claude Code dasturini vaqti-vaqti bilan yangilash, terminalda, `/exit` buyrugʻidan keyin:
+
+   ```bash
+   claude update
+   ```
+
+7. Tarif limiti tugaganda agentlar toʻxtaydi (usage credits yoqilmagan boʻlsa: «Boshidanoq nimalar yoqilgan» qismining 1-bandi), ularning yozganlari sahifalarda qoladi. Limit yangilanganda qaytib kelib, «davom et» deb yozing.
+
+### Qaysi ishlar uchun roziligingiz kerak
+
+1. «Boshidanoq nimalar yoqilgan» roʻyxati ruxsat bergan narsalardan tashqari, quyidagilar uchun doim roziligingiz kerak: yangi mahsulot boshlash yoki mahsulotni yopish; doimiy ruxsatdan yoki siz belgilagan byudjetdan ortiq pul va har qanday yangi pullik xizmat; yuridik majburiyatlar va shartnomalar; sizning nomingizdan ochiq bayonotlar (postlar, saytda kompaniya yoki mahsulot haqida aytilganlar, reklama; mahsulot ekranlaridagi oddiy matnlar emas); kompaniyadan tashqariga biror narsa yuborish; roʻyxatdan oʻtish va yangi hisoblar; odam yollash; agentlarga doimiy ruxsat berish; mijozlar yoki foydalanuvchilar maʼlumotlarini yangi birovga berish, egalari rozi boʻlganidan ortiq ishlatish yoki saqlash, butunlay yoʻqolish yoki oshkor boʻlish xavfiga qoʻyish; mahsulot amaldagi mijozning maʼlumotlari yoki tizimlari bilan siz maʼqullaganidan tashqari nima qilishi (koʻchirish, yashirish, oʻchirish yoki ushlab turilganini qoʻyib yuborish, himoyani pasaytirish); mijozlar maʼlumotlariga kim kira olishi; mijozlarga vaʼda berish (narxlar, shartlar, ularga xabarlarning yangi turi); brend va mahsulot koʻrinishi; faqat siz bila oladigan narsalar; avval aytganingizga zid narsalar; va agentlarning himoyasini boʻshashtirish.
+2. Yana: shu roʻyxatga tegadigan oʻrta yoki katta ishning rejasi va `/onboard-company` paytida oʻzingiz qatʼiylashtirgan narsalar.
+3. Claude Code oʻzi ham agent buyruqni bajarishidan oldin terminalda soʻrashi mumkin. Uni oʻqing; tushunarsiz boʻlsa, ruxsat bermang va CEOdan soʻrang.
+4. Qolganini agentlar oʻzlari hal qilib, hisobotda aytadi, qanday bekor qilishni ham yozadi.
+
+### Tizimni yangilash
+
+1. Eng osoni — buni CEOga topshirish. Yangilanish himoya sozlamalarini oʻzgartirsa, CEO sizga oʻzgarishlarni koʻrsatib, quyidagi qadamlarni oʻzingiz bajarishingizni soʻraydi.
+
+   ```text
+   /directive Update us to the latest core
+   ```
+
+2. Yoki CEO seansini yopib (`/exit`), qoʻlda:
+
+   ```bash
+   cd ~/my-company
+   git fetch core && git switch -C core-update main && git merge --no-edit core/main
+   python3 -m unittest discover -s scripts/tests
+   python3 scripts/kb_lint.py
+   ```
+
+3. git ziddiyat (CONFLICT) haqida xabar bersa yoki tekshiruv muvaffaqiyatli oʻtmasa, orqaga qayting va nima boʻlganini CEOga ayting (ziddiyat boʻlmasa, birinchi buyruq xato haqida xabar beradi, bu odatiy hol):
+
+   ```bash
+   git merge --abort
+   git switch main
+   ```
+
+4. Ikkala tekshiruv ham muvaffaqiyatli oʻtsa, himoyada nima oʻzgarishini koʻrib chiqib ([qoʻllanma](docs/guide.md), «Pull later core updates»), yangilanishni qabul qiling:
+
+   ```bash
+   git switch main
+   git merge core-update
+   git push
+   ```
+
+5. Tizimni qoʻlda yangilaganingizni CEOga ayting: aks holda u oʻzgarishlarni begonaniki deb oʻylab, bekor qiladi.
+
+### Nusxangizni yopiq saqlang
+
+1. Repozitoriyni ochiq qilmang va boshqa joyga yubormang: unda sizning qarorlaringiz, vaqt oʻtishi bilan mahsulotlaringizning zaif joylari ham yoziladi.
+2. Parol va kalitlarni suhbatga ham, sahifalarga ham yozmang: faqat qayerda saqlanishini ayting.
+3. Nusxa yopiq ekanini istalgan vaqtda tekshirish mumkin: «Tekshirish» qismining 3-qadami.
+
+### Biror narsa ishlamasa
+
+1. `claude: command not found`. Yangi terminal oching; Windowsda buyruqni PowerShellga emas, Ubuntu oynasiga yozing. Yordam bermasa, «Barcha tizimlar uchun» qismining 2-qadamidagi PATH qatorini yozib, yangi terminal oching.
+2. Hisobingizga kirganingizdan keyin ham Claude Code sizni oʻtkazmasa, tarifingizni tekshiring: bepul tarif toʻgʻri kelmaydi.
+3. Testlar `OK` bilan tugamasa, `python3 --version` buyrugʻi bilan tekshiring: 3.10 yoki undan yangisi kerak. macOSda `brew install python` buyrugʻini takrorlab, yangi terminal oching; Ubuntu 22.04 yoki undan yangi boʻlishi kerak.
+4. GitHub `git push` yoki `gh` buyrugʻini qabul qilmasa, qaytadan kiring:
+
+   ```bash
+   gh auth login
+   gh auth setup-git
+   ```
+
+5. CEO emas, boshqasi javob bersa yoki `/onboard-company` buyrugʻi nomaʼlum boʻlsa, siz boshqa papkadasiz yoki bu papkaga ishonishga rozi boʻlmagansiz. `/exit` deb yozib, qayta ishga tushiring:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+6. Claude Code dasturini oʻrnatish `syntax error near unexpected token '<'` qatori bilan tugasa, Claude siz turgan joyda ishlamasligi mumkin («Nimalar kerak» qismining 3-bandi) yoki uni tarmoq toʻsib turibdi.
+
+Turli tillardagi matnlar bir-biridan farq qilsa, ingliz tilidagisi asos boʻladi.
+
+<a id="kk"></a>
+
+## Қазақша
+
+### Бұл не
+
+Бұл — Claude Code бағдарламасының ішінде жасанды интеллект агенттері жүргізетін компания. Claude Code терминалда (командалар жазылатын терезеде) жұмыс істейді. Сіз компанияның негізін қалаушысыз, агенттер сізді **Board** (директорлар кеңесі) деп атайды: не қалайтыныңызды қарапайым сөзбен айтасыз және тек **CEO** деген агентпен сөйлесесіз. CEO жұмысты басқа агенттерге (инженерлерге, тексерушілерге, зерттеушіге және, егер қоссаңыз, маркетинг бөліміне) бөліп береді, сізден тек сіз шешетін нәрселерді сұрайды және бәрін мәтіндік беттер тұратын қалтада сақтайды. Толығырақ: [нұсқаулық](docs/guide.md) (ағылшын тілінде). Лицензия: [MIT](LICENSE).
+
+### Не керек
+
+1. Компьютер: macOS 15 немесе одан жаңа (macOS 13 пен 14, сондай-ақ Intel процессорлы Mac компьютері де жарауы мүмкін, бірақ орнатуда қолданылатын Homebrew бағдарламасы оларға қолдау көрсетпейді); Windows 10 (2004 нұсқасы немесе одан жаңа) немесе Windows 11; не болмаса Ubuntu 22.04 немесе одан жаңа. Жедел жады кемінде 4 ГБ.
+2. Ақылы Claude тарифі: Pro, Max, Ultra, Team немесе Enterprise. Console (әзірлеушілерге арналған) аккаунты да жарайды, бірақ оның тариф лимиті жоқ: әр пайдалану үшін төлейсіз, агенттер ондағы ақша біткенше немесе Console-де өзіңіз қойған шығын шегіне (workspace spend limit) жеткенше жұмыс істей береді. claude.ai сайтының тегін тарифіне Claude Code кірмейді. Тариф неғұрлым үлкен болса, агенттер лимитке жеткенше соғұрлым көп жұмыс бітіреді; азырақ жұмсау жолы [нұсқаулықта](docs/guide.md) жазылған.
+3. Claude қолжетімді ел: [Anthropic тізімінде](https://www.anthropic.com/supported-countries) Қырғызстан, Өзбекстан және Қазақстан бар (2026-11-25 күні тексерілді).
+4. [github.com](https://github.com) сайтында тегін аккаунт: жабық көшірмеңіз сонда сақталады.
+5. Терминалда бұрын жұмыс істеп көрмедіңіз бе? Алдымен [жаңадан бастаушыларға арналған нұсқаулықты](https://code.claude.com/docs/en/terminal-guide) оқып шығыңыз (ағылшын тілінде).
+
+### Әдепкі бойынша не қосулы
+
+Алғаш рет іске қосқаннан бастап (сіздің бір әрекетіңізден кейін басталатын тармақтарда бұл айтылған) агенттер мыналарды сізден әр жолы сұрамай істейді. Әрқайсысының жанында оны қалай өшіру айтылған; «CEO-ға айтыңыз» деп жазылған жерде қарапайым сөз жеткілікті: CEO оны жазып алып, соған сай жұмыс істейді. `/onboard-company` командасы дәл осы тізімді көрсетіп, әрқайсысына қатаңырақ таңдау ұсынады. Толығырақ: [нұсқаулық](docs/guide.md) (ағылшын тілінде).
+
+Сіз жазғанның бәрі және агенттер оқығанның бәрі Claude-ты жасаған Anthropic компаниясына жіберіледі; ол солай жұмыс істейді. Pro, Max және Ultra тарифтерінде, аккаунтыңызда сондай баптау қосулы болса, Anthropic өз модельдерін солармен оқытады: оны [claude.ai/settings/data-privacy-controls](https://claude.ai/settings/data-privacy-controls) бетінен тексеріңіз. Team және Enterprise тарифтерінде және Console аккаунтында, сіз немесе ұйымыңыз ол деректерді оқытуға беруді өздеріңіз шешпесеңіздер, Anthropic өз модельдерін олармен оқытпайды.
+
+1. **Тарифтің лимиті біткенше жұмыс істейді,** үнемдеу үшін баяуламайды. Claude аккаунтыңызда лимиттен тыс ақылы пайдалану (usage credits) өшірулі болса, жұмыс лимитке жеткенде тоқтайды; қосулы болса, лимиттен әрі жалғасып, сіз қойған айлық шекке дейін (шек қоймасаңыз, `Unlimited`, яғни шексіз) ақшаңыз жұмсалады; Console аккаунтында әр пайдалануға ақша жұмсалады. Pro, Max және Ultra тарифтерінде usage credits-ті [claude.ai/settings/usage](https://claude.ai/settings/usage) бетінде немесе `/usage-credits` командасымен өшіресіз және сол айлық шекті қоясыз; Console аккаунтының шығын шегі Console-де қойылады. Өшіру: лимиттің қай бөлігіне дейін жұмыс істеу керегін CEO-ға айтыңыз.
+2. **Пайдаланушыларға жаңа нұсқаларды шығарады,** өнімнің қалай шығарылатынын сіз растап, барлық тексеру өткеннен кейін; тек негізгі тесттерді және өзгеріске қатысты тесттерді іске қосады. Шығарғаннан кейін бірдеңе дұрыс болмаса, алдыңғы нұсқаны қайтарып, сізге кейін айтады. Өшіру: әр шығару алдында сізден сұрасын немесе барлық тестті іске қоссын деп CEO-ға айтыңыз.
+3. **Орташа және үлкен жұмысты бастайды,** оның жоспары тексеруден өткеннен кейін; сізге оның қысқаша мазмұны беріледі. «Қандай істерге сіздің келісіміңіз керек» тізіміне қатысты жоспарлар бәрібір сізді күтеді. Өшіру: әр жоспарды көргіңіз келетінін CEO-ға айтыңыз.
+4. **Компанияның өз құпиясөздері мен кілттерін оқып, басқарады** (бағдарламалар өз кілттерін сақтайтын `.env` файлдары; егер сайттар орналастырылатын Vercel қызметін баптасаңыз, онда сақталған мәндер де, пайдаланушыларыңыз қолданатын сайттың (production) мәндерінен басқасы), жұмыс талап еткенде. Клиенттердің құпиясөздеріне тиісуге тыйым салынған; кез келген құпиясөздің немесе кілттің мәнін көрсетуге немесе оны Anthropic-тен (агент оқығанның бәрі ол арқылы өтеді) және кілт тиесілі қызметтен басқаға жіберуге де тыйым салынған. Бұл агенттер ұстанатын ереже, техникалық тосқауыл емес: компьютердегі басқа кілт файлдарын, соның ішінде жеке файлдарыңызды (`~/.ssh`, `~/.aws`) ашуға да ештеңе кедергі болмайды. Өшіру: CEO-ға айтыңыз. Бұл файлдарға қолжетімділікті бұғаттау үшін нұсқаулықта, осы тізімнің көшірмесінен кейін, баптауларға қосуға арналған жолдар берілген; оларды қосуды CEO-дан сұраңыз.
+5. **Тексерілген кодты өнімнің негізгі нұсқасына қосып, оның жұмыс көшірмелерін (git тармақтарын, branches) GitHub-қа жүктейді,** терминалда сұрамай. Өнімнің репозиторийі ашық болса, оларды бәрі көреді. Өшіру: CEO-ға айтыңыз; сіз растағаннан кейін ол баптауларды (`.claude/settings.json`, `company.json`) өзгертеді.
+6. **Neon дерекқорыңызда жұмыс істейді** (бұл — өнімнің деректерін интернетте сақтайтын қызмет), егер оны қосып, ол жерде не істеуге болатынын CEO-ға өз сөзіңізбен айтсаңыз (клиенттердің деректерін бөлек атау керек): ол жерде командаларды сұрамай орындайды, ол командалар деректерді өзгерте де, жоя да алады. Пайдаланушылар қолданатын негізгі (production) дерекқорда кестенің барлық жолын шартсыз өзгерту немесе жою, кестені босату, кестенің немесе бағанның өзін жою тек жаңа сақтық көшірмеден кейін мүмкін, бірақ одан кейін рұқсат етіледі; шарт бойынша таңдалған жолдарды өзгертуге немесе жоюға сақтық көшірме керек емес, олар барлық жол дерлік немесе бәрі болса да. Өшіру: оны қоспаңыз немесе 5-тармақта айтылғандай CEO-ға айтыңыз.
+7. **Тоқтатылған команданы бір рет қайталайды.** Қорғаныс — агенттердің командаларын тексеріп, қауіптілерін тоқтататын шағын бағдарламалар. Қорғаныс команданы тоқтатып, оның хабарламасында рұқсат етілген түрі аталса, агент команданы бір рет дәл сол түрде орындай алады. Өшіру: CEO-ға айтыңыз.
+8. **Сізге электрондық хат жазады,** күндік шегі жоқ, электрондық пошта мекенжайыңызды бергеннен кейін және тек сол мекенжайға. Өшіру: мекенжайыңызды бермеңіз немесе шегін айтыңыз.
+9. **Екінші пікір алу үшін кодты, жоспарларды және беттерді OpenAI мен Google-ға, ал посттардың мәтінін тілдік тексеру үшін Google-ға жібереді** (тілді тексеру тек маркетинг қосылғанда және бөлек кілтпен). Екінші пікір сіз кілттерді (`OPENAI_API_KEY`, `GEMINI_API_KEY`) нұсқаулықта көрсетілген жерге (оларды ешқашан әңгімеге жазбаңыз) қойып, сол кезде `/onboard-company` ұсынатын `company.json` файлындағы жазбаға келіскеннен кейін іске қосылады; кілттің өзі ештеңені бастамайды. Бұл компаниялар ол үшін ақша алады, жалғыз шегі — олардағы шотыңызда бар ақша; алған деректерімен өз жасанды интеллектін оқытуы мүмкін. Клиенттердің деректерін және құпиясөздерді жіберуге тыйым салынған. Өшіру: ол жазбаға келіспеңіз, кілтті алып тастаңыз немесе тоқтатсын деп CEO-ға айтыңыз; аккаунтыңызда оқытуға тыйым салу тек оқытуды өшіреді.
+10. **Құқықтық мәтіндерді күтпейді:** заң, жеке деректер және келісім туралы мәтіндер заңгерге арналған тізімге жазылады, ал жұмыс оларды күтпейді, клиенттеріңіз болса да; оған дейін тәуекел сізде. Бағалар, шарттар және клиенттерге жіберілетін хабарламалардың жаңа түрі үшін сіздің келісіміңіз бәрібір керек. Өшіру: алдымен құқықтық мәтіндерді реттесін деп CEO-ға айтыңыз.
+11. **Посттар үшін пікіріңіздің жобасын өзіңіз сөйлегендей етіп жазады,** егер маркетингті қоссаңыз: сіз түзетесіз, келісіміңізсіз ештеңе жарияланбайды. Өшіру: тек өзіңіз айтқандарды қолдансын деп CEO-ға айтыңыз.
+12. **Жасанды интеллект (ЖИ) жасаған суреті немесе видеосы бар посттарға Instagram-ның ЖИ белгісін қоймайды,** егер маркетингті қоссаңыз және сол пост үшін белгіні өзіңіз қоймасаңыз; «ЖИ жасаған» деген жасырын белгілер жүктелетін көшірмеден алып тасталады. Instagram ережелері мен сіз тұратын жердің заңы бұл белгіні талап етуі мүмкін: бұл сіздің жауапкершілігіңіз. Өшіру: белгіні әр постқа қойыңыз.
+13. **Компьютерді баяулатады:** жаңа ауыр жұмыс тек процессордың әр өзегіне орындалып жатқан немесе күтіп тұрған шамамен 2,5 тапсырма келгенде немесе, Mac-та, бос жад 5%-дан аз қалғанда ғана күтеді. Өшіру: CEO-ға қатаңырақ шекті айтыңыз.
+14. **Компанияның өзін жақсартады:** оның өз агенттерін, олардың нұсқауларын (skills) және компанияның бағдарламаларын (scripts) сізден сұрамай өзгертеді; әр өзгеріс алдымен тесттерден және басқа агенттің тексеруінен өтеді, ол туралы CEO есепте айтады. Қорғанысты босаңсытатын, қолжетімділікті кеңейтетін, сыртқа көбірек дерек жіберетін немесе сіз айтқанды әлсірететін өзгеріске, егер оны өзіңіз бұрын сұрамаған болсаңыз, келісіміңіз керек; баптаулар (`.claude/settings.json`, `company.json`) тек сіздің сөзіңізбен өзгертіледі. Өшіру: компанияның өзіндегі әр өзгеріс алдында сізден сұрасын деп CEO-ға айтыңыз.
+
+### Орнату
+
+Алдымен өз жүйеңізге арналған бөлікті, содан кейін «Барлық жүйелер үшін» бөлігін орындаңыз. Терминалға командаларды бір-бір блоктан қойып (Mac: Cmd+V; Ubuntu: Ctrl+Shift+V; Windows-тағы Ubuntu терезесі: тінтуірдің оң жақ түймесі), Enter басыңыз да, командалар орындалып біткенше күтіңіз. Орнату кезінде `Password:` немесе `[sudo] password for …` деген жол (не жүйеңіздің тіліндегі сондай жол) шықса, компьютеріңіздің құпиясөзін (WSL-де — Ubuntu құпиясөзін) жазыңыз: жазып жатқанда ол көрінбейді, бұл қалыпты жағдай. GitHub-тағы атыңыз немесе құпиясөзіңіз сұралса, ештеңе жазбаңыз: Ctrl+C басып, «Бірдеңе жұмыс істемесе» бөлігінің 4-тармағын орындаңыз.
+
+#### macOS
+
+1. Терминалды ашыңыз: Cmd+Space басып, `Terminal` деп жазып, Enter басыңыз.
+2. Homebrew бағдарламасын орнатыңыз, ол басқа бағдарламаларды орнатады. Ол құпиясөзіңізді және Enter басуды сұрайды, біраз уақыт алуы мүмкін; сіз бұл Mac-тың әкімшісі болуыңыз керек.
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+3. Орнату аяқталғанда `Next steps` дегенді табыңыз: `echo` немесе `eval` деп басталатын әр жолды бір-бірлеп көшіріп, терминалға қойып, Enter басыңыз. Ондай жолдар болмаса, жалғастыра беріңіз. Тексеру: `brew --version` нұсқа нөмірін көрсетуі керек; `command not found` десе, осы қадамды қайталаңыз.
+4. git (файлдардың өзгеру тарихын сақтайды), GitHub және Python (тексерулер сонда жұмыс істейді) бағдарламаларын орнатыңыз (Apple компаниясының өз Python бағдарламасы қажеттіден ескі болуы мүмкін):
+
+   ```bash
+   brew install git gh python
+   ```
+
+#### Windows (WSL 2)
+
+Windows-та WSL 2 жүйесін қолданыңыз: ол Windows ішінде Ubuntu-ны іске қосады. Компанияны төменде көрсетілгендей сонда орнатыңыз. Әзірге оны тікелей Windows-тың өзінде іске қоспаңыз: оның коды мен Claude Code құжаттамасына қарағанда, оның қорғанысы онда іске қосыла алмайды, ал PowerShell арқылы орындалған командалар қорғанысты айналып өтуі мүмкін. Нені өзгерту керегі [docs/windows.md](docs/windows.md) бетінде (ағылшын тілінде); WSL 2-ден немесе Mac-тан CEO-ға былай деуге болады: «docs/windows.md бойынша компанияны тікелей Windows-та жұмыс істейтін ет». Компания қалтасын Ubuntu-ның өз дискісінде (үй қалтаңызда) сақтаңыз, `/mnt/c` ішінде емес. WSL-де Claude Code Chrome-мен жұмыс істей алмайды, сондықтан трендтерді қарайтын агент пен CEO-ның браузер құралы ол жерде жұмыс істемейді, жоспарланған тапсырмалар да жұмыс істемейді («Күн сайын» бөлігі). Board desk (Notion-дағы сұрақтар мен жауаптар) да Ubuntu мен WSL-де жұмыс істемейді, қолмен де: оның кілті Mac-тың Keychain деген кілт қоймасында сақталады. Оны ол жерде баптамаңыз; CEO-ға терминалда жауап беріңіз.
+
+1. «Бастау» (Start) түймесін басып, `PowerShell` деп жазыңыз (бұл — Windows-тың командалар жазылатын бағдарламасы), оны тінтуірдің оң жақ түймесімен басып, «Әкімші ретінде іске қосу» (Run as administrator) дегенді таңдап, «Иә» (Yes) деп жауап беріңіз.
+2. Мына команданы жазыңыз:
+
+   ```powershell
+   wsl --install
+   ```
+
+   Орнатудың орнына анықтама мәтіні шықса, `wsl --list --online`, содан кейін `wsl --install -d Ubuntu` деп жазыңыз. Орнату 0.0% деген жерде тұрып қалса, `wsl --install --web-download -d Ubuntu` деп жазыңыз. Қатеде виртуалдандыру (virtualization) туралы айтылса, оны компьютердің BIOS баптауларынан қосу керек. Толығырақ: [Microsoft беті](https://learn.microsoft.com/en-us/windows/wsl/install) (ағылшын тілінде).
+
+3. Компьютерді қайта іске қосыңыз.
+4. «Бастау» (Start) мәзірінен Ubuntu бағдарламасын ашыңыз (ол өзі ашылуы да мүмкін). Пайдаланушы аты (кіші латын әріптерімен, бос орынсыз) мен құпиясөз ойлап табыңыз. PowerShell-де тексеріңіз: `wsl -l -v` Ubuntu үшін VERSION 2 деп көрсетуі керек; 1 болса, `wsl --set-version Ubuntu 2` деп жазыңыз.
+5. Бұдан әрі барлық командаларды PowerShell терезесіне емес, Ubuntu терезесіне жазыңыз. «Ubuntu және WSL» бөлігіне өтіңіз.
+
+#### Ubuntu және WSL
+
+Терминалды ашыңыз: Ubuntu-да Ctrl+Alt+T басыңыз, Windows-та бұл — Ubuntu терезесі.
+
+1. git (файлдардың өзгеру тарихын сақтайды), curl (файлдарды жүктеп алады) және Python (тексерулер сонда жұмыс істейді) бағдарламаларын орнатыңыз:
+
+   ```bash
+   sudo apt update && sudo apt install -y git curl python3
+   ```
+
+2. GitHub бағдарламасын орнатыңыз ([дереккөз](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)). Блокты толығымен көшіріңіз:
+
+   ```bash
+   (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+     && sudo mkdir -p -m 755 /etc/apt/keyrings \
+     && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+     && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+     && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+     && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+     && sudo apt update \
+     && sudo apt install gh -y
+   ```
+
+#### Барлық жүйелер үшін
+
+1. Python нұсқасын тексеріңіз: 3.10 немесе одан жаңасы керек.
+
+   ```bash
+   python3 --version
+   ```
+
+2. Claude Code бағдарламасын орнатыңыз:
+
+   ```bash
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+   Егер `Setup notes:` дегеннің астында `~/.local/bin` PATH-та жоқ деп жазылса, Mac-та мына жолды жазыңыз:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+   ```
+
+   Ubuntu мен WSL-де — мынаны:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+   ```
+
+3. Жаңа терминал ашып, тексеріңіз: 2.1.295 немесе одан жаңа нұсқа керек. Ескі болса, `claude update` деп жазыңыз. `claude doctor` ешқандай қате көрсетпеуі керек; одан шығу үшін Enter немесе Esc басыңыз.
+
+   ```bash
+   claude --version
+   claude doctor
+   ```
+
+4. GitHub аккаунтыңызға кіріңіз: GitHub.com, содан кейін HTTPS таңдаңыз, Git туралы сұраққа Yes деп жауап беріп, браузер арқылы кіріңіз. Бір реттік код шықса, оны көшіріп, Enter басыңыз. Браузер ашылмаса (WSL), [github.com/login/device](https://github.com/login/device) бетін өзіңіз ашып, кодты жазыңыз. Соңында `Logged in as` және атыңыз шығады.
+
+   ```bash
+   gh auth login
+   ```
+
+5. git бағдарламасына атыңыз бен электрондық поштаңызды көрсетіңіз: тырнақшаның ішіне өз атыңызды және GitHub аккаунтыңыздың электрондық поштасын қойып, осы екі жолды жазыңыз; тырнақшалар түзу күйінде қалсын. Қателестіңіз бе? Жолды қайта жазыңыз.
+
+   ```bash
+   git config --global user.name "YOUR NAME"
+   git config --global user.email "YOUR EMAIL"
+   ```
+
+### Сіздің жабық көшірмеңіз
+
+Репозиторий — GitHub-тағы файлдар мен олардың өзгеру тарихы сақталатын қалта. Fork түймесін баспаңыз: ашық репозиторийдің осы түймемен жасалған көшірмесі ашық күйінде қалады.
+
+1. Аккаунтыңызда бос жабық репозиторий жасаңыз. Команда оның мекенжайын көрсетеді.
+
+   ```bash
+   gh repo create my-company --private
+   ```
+
+2. Жүйені `my-company` қалтасына жүктеп алыңыз.
+
+   ```bash
+   cd ~
+   git clone https://github.com/azretkenzhaliev/agentic-company-core.git my-company
+   cd my-company
+   ```
+
+3. Екі мекенжай белгілеңіз: `core` — жаңартулар келетін жер (ол жаққа ештеңе жіберілмейді), `origin` — сіздің жабық көшірмеңіз. Блокты толығымен қойыңыз. Соңғы жолдардың бірінде `main -> main` деп жазылса, бәрі дұрыс.
+
+   ```bash
+   git remote rename origin core
+   git remote set-url --push core no-push
+   git remote add origin "$(gh repo view my-company --json url --jq .url).git"
+   git push -u origin main
+   ```
+
+   `git push` орындалмаса, YOUR-GITHUB-NAME дегеннің орнына GitHub-тағы атыңызды қойып, мына екі жолды жазыңыз:
+
+   ```bash
+   git remote set-url origin https://github.com/YOUR-GITHUB-NAME/my-company.git
+   git push -u origin main
+   ```
+
+### Тексеру
+
+1. Терминалда, компания қалтасында (`cd ~/my-company`), тесттерді іске қосыңыз. Бірнеше минут нүктелер шығып тұрады. Соңғы жол `OK` деп басталуы керек. Олай болмаса, «Бірдеңе жұмыс істемесе» бөлігінің 3-тармағын қараңыз; сонда да болмаса, «Алғаш рет іске қосу» бөлігіне өтіп, соңғы 20 жолды CEO-ға көрсетіңіз.
+
+   ```bash
+   python3 -m unittest discover -s scripts/tests
+   ```
+
+2. Сол қалтада беттерді тексеріңіз. Соңында `0 errors` тұруы керек. Олай болмаса, «Алғаш рет іске қосу» бөлігіне өтіп, соңғы 20 жолды CEO-ға көрсетіңіз.
+
+   ```bash
+   python3 scripts/kb_lint.py
+   ```
+
+3. Көшірмеңіздің жабық екенін тексеріңіз. Жауап `PRIVATE` болуы керек. `PUBLIC` болса, `gh repo edit my-company --visibility private --accept-visibility-change-consequences` деп жазып, қайта тексеріңіз.
+
+   ```bash
+   gh repo view my-company --json visibility --jq .visibility
+   ```
+
+### Алғаш рет іске қосу
+
+1. Қалтаға өтіп, Claude Code бағдарламасын іске қосыңыз:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Бірінші рет Claude Code түстер туралы (Enter басыңыз), содан кейін қалай кіру туралы сұрайды: жазылымы (subscription) бар Claude аккаунтын таңдаңыз; Console таңдалса, әр пайдалану үшін төлейсіз. Браузер ашылады: Claude тарифіңіз бар аккаунтпен кіріңіз. WSL-де браузер ашылмаса, латын әрпіндегі `c` пернесін басыңыз, сілтемені Windows-та ашып, кодты қойыңыз.
+3. Claude Code бұл қалтаға сенесіз бе деп сұрайды. Келісіңіз: сонда компанияның ережелері мен қорғанысы жүктеледі. Жазуға арналған жол шығады: «сәлем» деп жазыңыз, CEO жауап береді.
+4. `claude` командасын әрқашан осы қалтада іске қосыңыз: CEO-мен тек осы жерде сөйлесесіз.
+
+### Алғашқы қадамдар
+
+`/` белгісінен басталатын командалар Claude Code іске қосылғаннан кейін, соның ішінде жазылады.
+
+1. Компанияңыз туралы CEO-ға айтып беріңіз. CEO шамамен 45 минут сұрақ қояды; өз тіліңізде жауап беріңіз, «өткізіп жібер» немесе «кейін» десеңіз де болады.
+
+   ```text
+   /onboard-company
+   ```
+
+2. Коды бар әр өнім үшін: `my-product` дегенді 1-қадамда таңдалған атқа ауыстырыңыз. CEO оның атын немесе мекенжайын әлі білмесе, алдымен оған айтыңыз: «Менің өнімім … деп аталады, оның коды … жерінде» (мекенжай немесе қалта). Агент кодты зерттеп, оның құрылымын және қалай шығарылатынын жазып қояды.
+
+   ```text
+   /onboard-codebase my-product
+   ```
+
+3. Алғашқы тапсырмаңызды беріңіз: `/directive` сөзінен кейін не қалайтыныңызды қарапайым сөзбен, өз тіліңізде жазыңыз. Бұл сөзді жазбай, жай хабарлама жіберсеңіз де болады. Мысалы («Наубайханам үшін бір беттік сайт жаса»):
+
+   ```text
+   /directive Make a one-page site for my bakery
+   ```
+
+### Күн сайын
+
+Агенттер Claude Code ашық тұрғанда және компьютер ұйықтамай тұрғанда ғана жұмыс істейді. Жоспарланған тапсырмалар бұған жатпайды: сағат сайын Notion-ға жазба қалдыру және ол жерден жауаптарыңызды оқу (Board desk), батарея заряды азайғаны туралы электрондық хаттар, сіз мақұлдаған посттардың шығу уақытын белгілеу және маркетинг файлдарының түнгі көшірмесі. Олардың ешқайсысы өздігінен басталмайды: әрқайсысына `company.json` файлындағы өз жазбасы (ол туралы Claude Code сізден сұрайды) және өз орнату командасы керек, олар тек Mac-та орнатылады; басқа жүйелерде Board desk қолмен де жұмыс істемейді, сондықтан оны баптамаңыз. Түнгі көшірмеден басқасының бәрі тарифіңіздің лимитін жұмсайды.
+
+1. Жұмысты бастау:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Жұмыстың жайын білу:
+
+   ```text
+   /report
+   ```
+
+3. Жаңа жұмыс тапсыру: `/directive`, содан кейін өз сөзіңіз.
+4. Аяқтау:
+
+   ```text
+   /exit
+   ```
+
+5. Келесі жолы соңғы әңгімені жалғастыру:
+
+   ```bash
+   cd ~/my-company
+   claude -c
+   ```
+
+6. Claude Code бағдарламасын анда-санда жаңарту, терминалда, `/exit` командасынан кейін:
+
+   ```bash
+   claude update
+   ```
+
+7. Тарифтің лимиті біткенде агенттер тоқтайды (usage credits қосулы болмаса: «Әдепкі бойынша не қосулы» бөлігінің 1-тармағы), олардың жазғандары беттерде қалады. Лимит жаңарғанда қайтып келіп, «жалғастыр» деп жазыңыз.
+
+### Қандай істерге сіздің келісіміңіз керек
+
+1. «Әдепкі бойынша не қосулы» тізімі рұқсат бергендерді қоспағанда, мыналарға әрқашан келісіміңіз керек: жаңа өнім бастау немесе өнімді жабу; тұрақты рұқсаттан немесе сіз белгілеген бюджеттен асатын ақша және кез келген жаңа ақылы қызмет; құқықтық міндеттемелер мен келісімшарттар; сіздің атыңыздан жасалатын жария мәлімдемелер (посттар, сайтта компания немесе өнім туралы айтылғандар, жарнама; өнім экрандарындағы қарапайым мәтіндер емес); компаниядан сыртқа бірдеңе жіберу; тіркелулер мен жаңа аккаунттар; адам жалдау; агенттерге тұрақты рұқсат беру; клиенттердің немесе пайдаланушылардың деректерін жаңа біреуге беру, олар келіскеннен тыс қолдану немесе сақтау, біржола жоғалу немесе жария болу қаупіне ұшырату; өнімнің қазіргі клиенттің деректерімен немесе жүйелерімен сіз мақұлдағаннан тыс не істейтіні (жылжыту, жасыру, жою немесе ұсталып тұрғанын босату, қорғанысты төмендету); клиенттердің деректеріне кім кіре алатыны; клиенттерге уәде беру (бағалар, шарттар, оларға хабарламалардың жаңа түрі); бренд пен өнімнің көрінісі; тек сіз біле алатын нәрселер; бұрын айтқаныңызға қайшы нәрселер; және агенттердің қорғанысын босаңсыту.
+2. Сондай-ақ: осы тізімге қатысты орташа немесе үлкен жұмыстың жоспары және `/onboard-company` кезінде өзіңіз қатаңдатқан нәрселер.
+3. Claude Code-тың өзі де агент команда орындамас бұрын терминалда сұрауы мүмкін. Оны оқыңыз; түсініксіз болса, рұқсат бермей, CEO-дан сұраңыз.
+4. Қалғанын агенттер өздері шешіп, есепте айтады, қалай кері қайтаруды да жазады.
+
+### Жүйені жаңарту
+
+1. Ең оңайы — мұны CEO-ға тапсыру. Жаңарту қорғаныс баптауларын өзгертсе, CEO сізге өзгерістерді көрсетіп, төмендегі қадамдарды өзіңіз орындауды сұрайды.
+
+   ```text
+   /directive Update us to the latest core
+   ```
+
+2. Немесе CEO-ны жауып (`/exit`), қолмен:
+
+   ```bash
+   cd ~/my-company
+   git fetch core && git switch -C core-update main && git merge --no-edit core/main
+   python3 -m unittest discover -s scripts/tests
+   python3 scripts/kb_lint.py
+   ```
+
+3. git қайшылық (CONFLICT) туралы айтса немесе тексеру өтпесе, артқа қайтып, не болғанын CEO-ға айтыңыз (қайшылық болмаса, бірінші команда қате туралы айтады, бұл қалыпты жағдай):
+
+   ```bash
+   git merge --abort
+   git switch main
+   ```
+
+4. Екі тексеру де өтсе, қорғаныста не өзгеретінін қарап шығып ([нұсқаулық](docs/guide.md), «Pull later core updates»), жаңартуды қабылдаңыз:
+
+   ```bash
+   git switch main
+   git merge core-update
+   git push
+   ```
+
+5. Жүйені қолмен жаңартқаныңызды CEO-ға айтыңыз: әйтпесе ол өзгерістерді бөгденікі деп ойлап, кері қайтарады.
+
+### Көшірмеңізді жабық сақтаңыз
+
+1. Репозиторийді ашық қылмаңыз және басқа жаққа жібермеңіз: онда сіздің шешімдеріңіз, уақыт өте келе өнімдеріңіздің осал жерлері де жазылады.
+2. Құпиясөздер мен кілттерді әңгімеге де, беттерге де жазбаңыз: тек қайда сақталатынын айтыңыз.
+3. Көшірменің жабық екенін кез келген уақытта тексеруге болады: «Тексеру» бөлігінің 3-қадамы.
+
+### Бірдеңе жұмыс істемесе
+
+1. `claude: command not found`. Жаңа терминал ашыңыз; Windows-та команданы PowerShell терезесіне емес, Ubuntu терезесіне жазыңыз. Көмектеспесе, «Барлық жүйелер үшін» бөлігінің 2-қадамындағы PATH жолын жазып, жаңа терминал ашыңыз.
+2. Аккаунтыңызға кіргеннен кейін де Claude Code сізді кіргізбесе, тарифіңізді тексеріңіз: тегін тариф жарамайды.
+3. Тесттер `OK` деп аяқталмаса, `python3 --version` командасымен тексеріңіз: 3.10 немесе одан жаңасы керек. macOS-та `brew install python` командасын қайталап, жаңа терминал ашыңыз; Ubuntu 22.04 немесе одан жаңа болуы керек.
+4. GitHub `git push` немесе `gh` командасын қабылдамаса, қайта кіріңіз:
+
+   ```bash
+   gh auth login
+   gh auth setup-git
+   ```
+
+5. CEO емес, басқасы жауап берсе немесе `/onboard-company` командасы белгісіз болса, сіз басқа қалтадасыз немесе бұл қалтаға сенуге келіспегенсіз. `/exit` деп жазып, қайта іске қосыңыз:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+6. Claude Code бағдарламасын орнату `syntax error near unexpected token '<'` деген жолмен аяқталса, Claude сіз тұрған жерде қолжетімсіз болуы мүмкін («Не керек» бөлігінің 3-тармағы) немесе оны желі бұғаттап тұр.
+
+Әртүрлі тілдегі мәтіндер бір-біріне сәйкес келмесе, ағылшын тіліндегісі негізге алынады.
+
+<a id="en"></a>
+
+## English
+
+### What this is
+
+This is a company run by AI agents inside Claude Code, a program that works in the terminal (the window where you type commands). You are the founder, and the agents call you the **Board** (of directors): you say what you want in plain words, and you talk only to the agent called the **CEO**. The CEO gives the work to other agents (engineers, reviewers, a researcher and, if you switch it on, a marketing department), asks you only about what is yours to decide, and keeps everything in a folder of text pages. More: [the guide](docs/guide.md). License: [MIT](LICENSE).
+
+### What you need
+
+1. A computer: macOS 15 or later (macOS 13 and 14, and Macs with an Intel processor, may also work, but without the support of Homebrew, a program the install uses); Windows 10 (version 2004 or later) or Windows 11; or Ubuntu 22.04 or later. At least 4 GB of memory (RAM).
+2. A paid Claude plan: Pro, Max, Ultra, Team or Enterprise. A Console account (for developers) also works, but it has no plan limit: you pay for each use, and the agents go on until the money there runs out or they reach the workspace spend limit you set in the Console. The free claude.ai plan does not include Claude Code. The bigger the plan, the more the agents get done before its limit; [the guide](docs/guide.md) says how to use less.
+3. A country where Claude is available: [Anthropic's list](https://www.anthropic.com/supported-countries) has Kyrgyzstan, Uzbekistan and Kazakhstan (checked 2026-11-25).
+4. A free account at [github.com](https://github.com): your private copy will be kept there.
+5. Never worked in a terminal? Read the [guide for beginners](https://code.claude.com/docs/en/terminal-guide) first.
+
+### What is on by default
+
+From the first start (items that begin after something you do say so), the agents do the following without asking you each time. Beside each is how to switch it off; where it says "tell the CEO", ordinary words are enough: the CEO writes them down and follows them. The command `/onboard-company` shows the same list and offers a stricter choice for each. More: [the guide](docs/guide.md).
+
+Everything you type, and everything the agents read, is sent to Anthropic, the company that makes Claude; that is how it works. On Pro, Max and Ultra plans it is used to train Anthropic's models when that setting is on in your account: check it at [claude.ai/settings/data-privacy-controls](https://claude.ai/settings/data-privacy-controls). On Team and Enterprise plans and Console accounts it isn't, unless you or your organization chose to give it.
+
+1. **Work until the plan's limit runs out,** without slowing down to save it. With usage credits off in your Claude account, the work stops at the limit; with them on, it goes on past the limit and costs you money, up to the monthly limit you set (`Unlimited` when you set none); with a Console account, every use costs money. On Pro, Max and Ultra you switch the credits off and set that limit at [claude.ai/settings/usage](https://claude.ai/settings/usage) or with `/usage-credits`; a Console account's spend limit is set in the Console. To switch off: tell the CEO how far into the limit to go.
+2. **Release new versions to users** once you have confirmed how the product is released and every check passes; they run only the essential tests and those the change touches. If something is wrong after a release, they bring back the previous version, and they tell you afterwards. To switch off: tell the CEO to ask you before each release, or to run all the tests.
+3. **Start medium and large work** once its plan has passed review; you get a short summary. Plans that touch the list "What needs your yes" still wait for you. To switch off: tell the CEO that you want to see every plan.
+4. **Read and manage the company's own passwords and keys** (`.env` files, where programs keep their keys; if you set up Vercel, a hosting service, also the values kept there, except those of the site your users use (production)) when a task needs them. Customers' passwords are off limits, and so is showing a value or sending it to anyone but Anthropic (whatever an agent reads passes through it) and the service the key belongs to. This is a rule the agents follow, not a technical barrier: nothing stops them from opening other key files on the computer either, your personal ones included (`~/.ssh`, `~/.aws`). To switch off: tell the CEO. To block those files, the guide has lines to add to the settings, after its copy of this list; ask the CEO to add them.
+5. **Add reviewed code to a product's main version, and upload working copies of it (branches) to GitHub,** without a question in the terminal. If a product's repository is public, everyone sees them. To switch off: tell the CEO; it changes the settings (`.claude/settings.json`, `company.json`) once you confirm.
+6. **Work in your Neon database** (a service that keeps a product's data on the internet), if you connect it and tell the CEO in your own words what they may do there (customers' data must be named separately): they run commands there without a question, and these can change and delete data. In the database your users use (production), changing or deleting all the rows of a table without a condition, emptying it, or removing a table or a column needs a fresh backup first, but then it is allowed; changing or deleting rows chosen by a condition needs no backup, even when that is nearly all of them, or all. To switch off: don't connect it, or tell the CEO, as in item 5.
+7. **Repeat a stopped command once.** Guards are small programs that check the agents' commands and stop dangerous ones. When a guard stops a command and its message names the allowed form, the agent may run it once in exactly that form. To switch off: tell the CEO.
+8. **Write you emails** with no daily limit, once you give your address, and only to it. To switch off: don't give the address, or name a limit.
+9. **Send code, plans and pages to OpenAI and Google for a second opinion, and the texts of posts to Google for a language check** (the language check only with marketing on and with a key of its own). Second opinions start once you put the keys (`OPENAI_API_KEY`, `GEMINI_API_KEY`) where the guide says, never in the conversation, and agree to the entry in `company.json` that `/onboard-company` then proposes; a key by itself starts nothing. These companies charge for it, with no limit but the money in your account there, and may train their AI on what they receive. Customers' data and passwords must not be sent. To switch off: don't agree to the entry, remove the key, or tell the CEO to stop; forbidding training in your account switches off only the training.
+10. **Not wait for legal texts:** wording on law, privacy and consent goes on a list for a lawyer, and the work doesn't wait for it, even if you already have customers; until then the risk is yours. Prices, terms and a new kind of message to customers still need your yes. To switch off: tell the CEO to settle the legal texts first.
+11. **Draft your opinions for posts in your voice,** if you switch marketing on: you correct them, and nothing is posted without your yes. To switch off: tell the CEO to use only what you said yourself.
+12. **Leave Instagram's AI label off posts with AI-made pictures or video,** if you switch marketing on, unless you tick it for that post; the hidden marks that say "made by AI" are removed from the uploaded copy. Instagram's terms and the law where you live may require the label: that is your responsibility. To switch off: tick the label on each post.
+13. **Make the computer slow:** new heavy work waits only when about 2.5 tasks run or wait for each processor core, or, on a Mac, when less than 5% of memory is free. To switch off: name a stricter limit to the CEO.
+14. **Improve the company itself:** they change its own agents, their instructions (skills) and its programs (scripts) without asking you; each change is first tested and reviewed by another agent, and the CEO tells you in its report. A change that loosens a guard, gives wider access, sends more data out or weakens something you said needs your yes, unless you already asked for it yourself; the settings (`.claude/settings.json`, `company.json`) change only on your word. To switch off: tell the CEO to ask you before every change to the company itself.
+
+### Install
+
+Do the part for your system, then the part "For all systems". Paste one block of commands at a time into the terminal (Mac: Cmd+V; Ubuntu: Ctrl+Shift+V; the Ubuntu window in Windows: the right mouse button) and press Enter; wait until it ends. When a line says `Password:` or `[sudo] password for …` (or the same in your system's language) during the install, type your computer's password (in WSL, the Ubuntu one): it doesn't show as you type, which is normal. If you are asked for a GitHub user name or password, type nothing: press Ctrl+C and do item 4 of "If something doesn't work".
+
+#### macOS
+
+1. Open the terminal: press Cmd+Space, type `Terminal`, press Enter.
+2. Install Homebrew, a program that installs other programs. It asks for your password and for Enter, and can take a while; you must be an administrator of this Mac.
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+3. When it ends, find `Next steps`: copy each line that begins with `echo` or `eval`, one at a time, paste it and press Enter. If there are none, go on. Check: `brew --version` must show a number; if it says `command not found`, do this step again.
+4. Install git (it keeps the history of files), GitHub's program and Python (the checks run on it; Apple's own Python may be older than needed):
+
+   ```bash
+   brew install git gh python
+   ```
+
+#### Windows (WSL 2)
+
+On Windows, use WSL 2: it runs Ubuntu inside Windows. Install the company there, as below. Don't run it directly in Windows yet: judging by its code and Claude Code's documentation, its guards can't start there, and commands run through PowerShell can pass without them. What to change is in [docs/windows.md](docs/windows.md); you can tell the CEO, from WSL 2 or a Mac: "Make the company run on native Windows, by docs/windows.md." Keep the company's folder on Ubuntu's own disk (in your home folder), not under `/mnt/c`. In WSL, Claude Code can't use Chrome, so the trend reader and the CEO's browser tool don't work there, and neither do the scheduled jobs (the part "Every day"). The Board desk (questions and answers in Notion) doesn't work on Ubuntu or in WSL either, not even by hand: its key is kept in the Mac's Keychain. Don't set it up there; answer the CEO in the terminal.
+
+1. Click Start, type `PowerShell` (a Windows program for typing commands), click it with the right mouse button, choose "Run as administrator", and answer Yes.
+2. Type the command:
+
+   ```powershell
+   wsl --install
+   ```
+
+   If you see a help text instead of an install, type `wsl --list --online` and then `wsl --install -d Ubuntu`. If the install stays at 0.0%, type `wsl --install --web-download -d Ubuntu`. If an error speaks of virtualization, it has to be switched on in the computer's BIOS settings. More: [Microsoft's page](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+3. Restart the computer.
+4. Open Ubuntu from the Start menu (it may open by itself). Choose a user name (small Latin letters, no spaces) and a password. Check in PowerShell: `wsl -l -v` must show VERSION 2 for Ubuntu; if it shows 1, type `wsl --set-version Ubuntu 2`.
+5. From here on, type every command in the Ubuntu window, not in PowerShell. Go on with the part "Ubuntu and WSL".
+
+#### Ubuntu and WSL
+
+Open the terminal: on Ubuntu, press Ctrl+Alt+T; on Windows, it is the Ubuntu window.
+
+1. Install git (it keeps the history of files), curl (it downloads files) and Python (the checks run on it):
+
+   ```bash
+   sudo apt update && sudo apt install -y git curl python3
+   ```
+
+2. Install GitHub's program ([source](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)). Copy the whole block:
+
+   ```bash
+   (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+     && sudo mkdir -p -m 755 /etc/apt/keyrings \
+     && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+     && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+     && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+     && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+     && sudo apt update \
+     && sudo apt install gh -y
+   ```
+
+#### For all systems
+
+1. Check the Python version: it must be 3.10 or later.
+
+   ```bash
+   python3 --version
+   ```
+
+2. Install Claude Code:
+
+   ```bash
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+   If it says under `Setup notes:` that `~/.local/bin` is not in your PATH, type this line on a Mac:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+   ```
+
+   And on Ubuntu and WSL, this one:
+
+   ```bash
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+   ```
+
+3. Open a new terminal and check: the version must be 2.1.295 or later. If it is older, type `claude update`. `claude doctor` must show no errors; press Enter or Esc to leave it.
+
+   ```bash
+   claude --version
+   claude doctor
+   ```
+
+4. Sign in to GitHub: choose GitHub.com, then HTTPS, answer Yes to the question about Git, and sign in through the browser. If it shows a one-time code, copy it and press Enter. If no browser opens (WSL), open [github.com/login/device](https://github.com/login/device) yourself and enter the code. At the end it says `Logged in as` and your name.
+
+   ```bash
+   gh auth login
+   ```
+
+5. Tell git your name and email: type these two lines with your own name and the email of your GitHub account between the quotes; keep the straight quotes. A mistake? Type the line again.
+
+   ```bash
+   git config --global user.name "YOUR NAME"
+   git config --global user.email "YOUR EMAIL"
+   ```
+
+### Your private copy
+
+A repository is a folder on GitHub with files and the history of their changes. Don't press Fork: a copy of a public repository made with that button stays public.
+
+1. Create an empty private repository in your account. The command shows its address.
+
+   ```bash
+   gh repo create my-company --private
+   ```
+
+2. Download the system into the folder `my-company`.
+
+   ```bash
+   cd ~
+   git clone https://github.com/azretkenzhaliev/agentic-company-core.git my-company
+   cd my-company
+   ```
+
+3. Set two addresses: `core` is where updates come from (nothing gets sent there), `origin` is your private copy. Paste the whole block. It worked if one of the last lines says `main -> main`.
+
+   ```bash
+   git remote rename origin core
+   git remote set-url --push core no-push
+   git remote add origin "$(gh repo view my-company --json url --jq .url).git"
+   git push -u origin main
+   ```
+
+   If `git push` fails, type these two lines, with your name on GitHub instead of YOUR-GITHUB-NAME:
+
+   ```bash
+   git remote set-url origin https://github.com/YOUR-GITHUB-NAME/my-company.git
+   git push -u origin main
+   ```
+
+### Check it
+
+1. In the terminal, in the company's folder (`cd ~/my-company`), run the tests. Dots run by for some minutes. The last line must begin with `OK`. If it doesn't, see item 3 of "If something doesn't work"; if it still doesn't, go on to "First start" and show the CEO the last 20 lines.
+
+   ```bash
+   python3 -m unittest discover -s scripts/tests
+   ```
+
+2. In the same folder, check the pages. The end must say `0 errors`. If it doesn't, go on to "First start" and show the CEO the last 20 lines.
+
+   ```bash
+   python3 scripts/kb_lint.py
+   ```
+
+3. Check that your copy is private. The answer must be `PRIVATE`. If it says `PUBLIC`, type `gh repo edit my-company --visibility private --accept-visibility-change-consequences` and check again.
+
+   ```bash
+   gh repo view my-company --json visibility --jq .visibility
+   ```
+
+### First start
+
+1. Go to the folder and start Claude Code:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. The first time, Claude Code asks for colors (press Enter), then how to log in: choose the Claude account with a subscription; the Console choice bills each use. The browser opens: log in with the account that has your Claude plan. In WSL, if no browser opens, press `c`, open the link in Windows and paste the code.
+3. Claude Code asks whether you trust this folder. Agree: then the company's rules and guards load. You see a line to type in: write "hello", and the CEO answers.
+4. Always start `claude` in this folder: only here do you talk to the CEO.
+
+### First steps
+
+Commands that start with `/` are typed inside Claude Code, once it has started.
+
+1. Tell the CEO about your company. It asks questions for about 45 minutes; answer in your own language, and you can say "skip" or "later".
+
+   ```text
+   /onboard-company
+   ```
+
+2. For each product that already has code: replace `my-product` with the name chosen in step 1. If the CEO has no name or address for it yet, tell it first: "My product is called …, its code is at …" (an address or a folder). An agent studies the code and writes down how it is built and released.
+
+   ```text
+   /onboard-codebase my-product
+   ```
+
+3. Give your first order: after the word `/directive`, write in plain words, in your own language, what you want. An ordinary message without that word works too. For example:
+
+   ```text
+   /directive Make a one-page site for my bakery
+   ```
+
+### Every day
+
+The agents work only while Claude Code is open and the computer is awake. The exceptions are the scheduled jobs: hourly notes and reading your answers in Notion (the Board desk), emails about a low battery, scheduling the posts you approved, and a nightly copy of marketing's files. None starts by itself: each needs its entry in `company.json`, which Claude Code asks you about, and its install command, and they install only on a Mac; elsewhere the Board desk doesn't work by hand either, so don't set it up. All but the nightly copy use your plan's limit.
+
+1. Start work:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+2. Find out how things are going:
+
+   ```text
+   /report
+   ```
+
+3. Ask for something new: `/directive` and then your words.
+4. Finish:
+
+   ```text
+   /exit
+   ```
+
+5. Next time, continue the last conversation:
+
+   ```bash
+   cd ~/my-company
+   claude -c
+   ```
+
+6. Update Claude Code from time to time, in the terminal, after `/exit`:
+
+   ```bash
+   claude update
+   ```
+
+7. When your plan's limit is used up, the agents stop (unless you have usage credits on: item 1 of "What is on by default"), and their notes stay in the pages. When the limit resets, come back and write "continue".
+
+### What needs your yes
+
+1. Except what "What is on by default" allows, always: starting or closing a product; money beyond a standing permission or a budget you set, and any new paid service; legal commitments and contracts; public statements in your name (posts, website claims, ads; not a product's ordinary screen texts); sending anything outside the company; sign-ups and new accounts; hiring people; standing permissions for agents; customers' or users' data going to someone new, being used or kept beyond what they agreed to, or at risk of being lost or exposed for good; what a product does to a live customer's data or systems beyond what you approved (moving, hiding, deleting or releasing it, lowering protection); who can access customers' data; promises to customers (prices, terms, a new kind of message to them); the look of the brand and the product; what only you can know; going against what you said earlier; and loosening the agents' guards.
+2. Also the plan of a medium or large piece of work that touches this list, and whatever you made stricter yourself in `/onboard-company`.
+3. Claude Code itself may also ask in the terminal before an agent runs a command. Read it; if it isn't clear, refuse and ask the CEO.
+4. Everything else the agents decide themselves and tell you in a report, with how to undo it.
+
+### Updating the system
+
+1. The easiest way is to give it to the CEO. If the update changes the guards' settings, the CEO shows you the changes and asks you to do the steps below yourself.
+
+   ```text
+   /directive Update us to the latest core
+   ```
+
+2. Or by hand, with the CEO closed (`/exit`):
+
+   ```bash
+   cd ~/my-company
+   git fetch core && git switch -C core-update main && git merge --no-edit core/main
+   python3 -m unittest discover -s scripts/tests
+   python3 scripts/kb_lint.py
+   ```
+
+3. If git reports a conflict (CONFLICT) or a check fails, go back and tell the CEO what happened (without a conflict, the first command reports an error, which is normal):
+
+   ```bash
+   git merge --abort
+   git switch main
+   ```
+
+4. If both checks pass, look at what changes in the guards ([the guide](docs/guide.md), "Pull later core updates"), and accept the update:
+
+   ```bash
+   git switch main
+   git merge core-update
+   git push
+   ```
+
+5. Tell the CEO that you updated the system by hand: otherwise it takes the changes for somebody else's and reverts them.
+
+### Keep your copy private
+
+1. Don't make the repository public, and don't send it anywhere else: it holds your decisions and, in time, the weak spots of your products.
+2. Don't write passwords or keys in the conversation or in the pages: say only where they are kept.
+3. You can check that the copy is private at any time: step 3 of "Check it".
+
+### If something doesn't work
+
+1. `claude: command not found`. Open a new terminal; on Windows, type the command in the Ubuntu window, not in PowerShell. If that doesn't help, type the PATH line of step 2 of "For all systems" and open a new terminal.
+2. Claude Code doesn't let you in after you log in. Check your plan: the free one doesn't work.
+3. The tests don't end with `OK`. Check `python3 --version`: it must be 3.10 or later. On macOS, run `brew install python` again and open a new terminal; Ubuntu must be 22.04 or later.
+4. GitHub refuses `git push` or `gh`. Sign in again:
+
+   ```bash
+   gh auth login
+   gh auth setup-git
+   ```
+
+5. Somebody other than the CEO answers, or the command `/onboard-company` is unknown. You are in another folder, or you didn't agree to trust this one. Type `/exit` and start again:
+
+   ```bash
+   cd ~/my-company
+   claude
+   ```
+
+6. The install of Claude Code ends with `syntax error near unexpected token '<'`. Claude may not be available where you are (item 3 of "What you need"), or the network blocks it.
+
+If the texts in different languages differ, this English one decides.

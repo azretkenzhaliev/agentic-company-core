@@ -2,7 +2,7 @@
 title: Page templates
 owner: ceo
 status: active
-updated: 2026-10-12
+updated: 2026-11-16
 related: [../README.md]
 ---
 
@@ -22,3 +22,6 @@ Copy a template, rename it per the ID rules in [../README.md](../README.md), and
 | [adr.md](adr.md) | `engineering/adr/ADR-NNN-<slug>.md` | cto |
 | [architecture.md](architecture.md) | `engineering/architecture/<product>.md` | cto |
 | [runbook.md](runbook.md) | `engineering/runbooks/<product>.md` | cto |
+| [content-piece.md](content-piece.md) | `marketing/<brand>/content/<week>/` | content-producer |
+| [ask.md](ask.md) | one ask (`A-n`) or Board step (`B-n`) in `company/board-desk/asks.md` | ceo |
+| [qa.md](qa.md) | one Board question and its answer (`Q-n`) in `company/board-desk/qa.md` | ceo |

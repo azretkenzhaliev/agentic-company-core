@@ -1,0 +1,80 @@
+{
+  "comment": "The models measure/ may load, each in <models dir>/<name>/<file>, downloaded once at install by hand, never at run time. A file's sha256 is checked before every load; null means its hash isn't pinned yet, and the model refuses to load until it is. An empty files map means no adapter loads it; a \"status\" says why a model is deferred or dropped.",
+  "models": [
+    {
+      "name": "silero-vad",
+      "stage": "audio: voice activity, which also gates speech recognition",
+      "source": "faster-whisper 1.2.1 wheel from PyPI (sha256 79a66ad50688c0b794dd501dc340a736992a6342f7f95e5811be60b5224a26a7), file faster_whisper/assets/silero_vad_v6.onnx; upstream github.com/snakers4/silero-vad",
+      "revision": "faster-whisper 1.2.1",
+      "files": {"silero_vad_v6.onnx": "4cbf549b8326f60f80f2536d9eefeb450a9abe83365a098031c89719f1be17d2"},
+      "licence": "MIT",
+      "gated": false,
+      "note": "1245151 bytes; ungated, so no pyannote and no Hugging Face account"
+    },
+    {
+      "name": "whisper-large-v3-mlx",
+      "stage": "speech, with word timestamps",
+      "source": "huggingface.co/mlx-community/whisper-large-v3-mlx",
+      "revision": "49e6aa286ad60c14352c404340ded53710378a11",
+      "files": {
+        "config.json": "34982ce6ae286095000f82ae9583b3431639e8b092bf60c961f203745e6500e3",
+        "weights.npz": "05ff791ce3630fae47e7c51004e9666204d786246ec07cac6110af768099b40d"
+      },
+      "licence": "MIT",
+      "gated": false,
+      "note": "about 3 GB; mlx-community/whisper-large-v3-turbo is lighter, but its revision and hash aren't pinned here yet"
+    },
+    {
+      "name": "transnetv2",
+      "stage": "cuts: shot boundaries (ffmpeg's scene score is the fallback)",
+      "source": "github.com/soCzech/TransNetV2, inference/transnetv2-weights (a TensorFlow SavedModel), converted once with tf2onnx to transnetv2.onnx",
+      "revision": null,
+      "files": {"transnetv2.onnx": null},
+      "licence": "MIT",
+      "gated": false,
+      "status": "deferred",
+      "note": "deferred: it needs TensorFlow and a one-off conversion to ONNX, and ffmpeg's scene score is the fallback meanwhile; pin the converted file's sha256 here after that conversion"
+    },
+    {
+      "name": "clip-vit-l14",
+      "stage": "embedding: one vector per piece, centroids per page and format; also the aesthetic head's input",
+      "source": "huggingface.co/Xenova/clip-vit-large-patch14, onnx/vision_model.onnx (OpenAI CLIP ViT-L/14 vision tower)",
+      "revision": "c307790166907339eed5a9a53a249af534102536",
+      "files": {"vision_model.onnx": "ff49f8aa57c7abfd26e382eb083e4dbf988505223a9bd3767dbfd4e729206709"},
+      "licence": "MIT",
+      "gated": false,
+      "note": "1216438437 bytes, pinned at install; only the vision tower is read (embed.clip_input does CLIP's preprocessing, so preprocessor_config.json isn't needed)"
+    },
+    {
+      "name": "laion-aesthetic",
+      "stage": "quality: an aesthetic score, a weak feature only",
+      "source": "github.com/christophschuhmann/improved-aesthetic-predictor, sac+logos+ava1-l14-linearMSE.pth",
+      "revision": "6934dd81792f086e613a121dbce43082cb8be85e",
+      "files": {"sac+logos+ava1-l14-linearMSE.pth": "21dd590f3ccdc646f0d53120778b296013b096a035a2718c9cb0d511bff0f1e0"},
+      "licence": "Apache-2.0 (the GitHub repo's licence)",
+      "gated": false,
+      "note": "3714759 bytes; its git blob 7c0d8aa2923efd62fcdddced392cf17c237150dd at that commit was checked at download; a linear head over CLIP ViT-L/14 embeddings, loaded with torch.load(weights_only=True)"
+    },
+    {
+      "name": "tesseract-script",
+      "stage": "text: on-screen text, Tesseract's model for the script you write in, read with --tessdata-dir this folder",
+      "source": "github.com/tesseract-ocr/tessdata_fast, tag 4.1.0, script/Latin.traineddata; name another script's file here for another alphabet, and pin its sha256",
+      "revision": "4.1.0",
+      "files": {"script/Latin.traineddata": null},
+      "licence": "Apache-2.0",
+      "gated": false,
+      "note": "the tesseract program itself is installed apart, outside this folder"
+    },
+    {
+      "name": "dover",
+      "stage": "quality: DOVER video quality, a weak feature only",
+      "source": "github.com/VQAssessment/DOVER",
+      "revision": null,
+      "files": {},
+      "licence": "unverified",
+      "gated": null,
+      "status": "dropped for now",
+      "note": "dropped for now: a weak feature, and its code and weights licences are unchecked; to bring it back, order that licence check"
+    }
+  ]
+}

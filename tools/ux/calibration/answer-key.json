@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "pages": {
+    "dashboard": "site/dashboard.html",
+    "booking": "site/booking.html"
+  },
+  "defects": [
+    {"id": "D1", "page": "dashboard", "what": "'Last updated' text is #999 on #fff (2.85:1)", "criteria": ["1.4.3"], "locators": ["last-updated", "last updated"], "kind": "axe", "check": "axe:color-contrast"},
+    {"id": "D2", "page": "dashboard", "what": "icon-only settings button: the svg is aria-hidden and the button has no name", "criteria": ["4.1.2", "1.1.1"], "locators": ["settings", "gear", "icon button", "icon-only"], "kind": "axe", "check": "axe:button-name"},
+    {"id": "D3", "page": "dashboard", "what": "pager buttons are 16x16 px and touch each other", "criteria": ["2.5.8"], "locators": ["pager", "pagination", "nav > button"], "kind": "axe", "check": "axe:target-size (a WCAG 2.2 rule, off by default)"},
+    {"id": "D4", "page": "dashboard", "what": "filter chips remove the focus outline and show nothing else on focus", "criteria": ["2.4.7"], "locators": ["chip", "filter"], "kind": "measured", "check": "measured:tabStops indicator none"},
+    {"id": "D5", "page": "dashboard", "what": "status is a coloured dot only: no text, no name", "criteria": ["1.4.1", "1.3.1", "1.1.1"], "locators": ["status", "dot"], "kind": "judgement", "check": "-"},
+    {"id": "D6", "page": "dashboard", "what": "'Delete all' empties the table at once: no confirmation, no undo", "criteria": ["H3", "H5", "3.3.4"], "locators": ["delete all", "delete-all"], "kind": "playwright", "check": "step: click #delete-all, rows gone"},
+    {"id": "D7", "page": "dashboard", "what": "a 260 px maintenance banner is inserted at the top 600 ms after load and pushes the page down", "criteria": ["CLS"], "locators": ["banner", "notice", "maintenance", "shift"], "kind": "measured", "check": "measured:clsLab > 0.1 at 375, 768 and 1440"},
+    {"id": "D8", "page": "dashboard", "what": "the Refresh button at the bottom has tabindex=1, so Tab reaches it first, before the search field", "criteria": ["2.4.3"], "locators": ["refresh", "tabindex", "focus order", "tab order"], "kind": "axe", "check": "axe:tabindex (a best-practice rule, on by default); measured:tabStops n=0 is #refresh"},
+    {"id": "E1", "page": "booking", "what": "the page is Bulgarian but <html lang> is en", "criteria": ["3.1.1"], "locators": ["lang", "html"], "kind": "measured", "check": "measured:lang=en with cyrillicShare 1"},
+    {"id": "E2", "page": "booking", "what": "the heading's first letter is a Latin T, not the Cyrillic Т", "criteria": ["i18n"], "locators": ["booking-title", "tеатър", "latin", "lookalike", "mixed"], "kind": "measured", "check": "measured:mixedScriptWords"},
+    {"id": "E3", "page": "booking", "what": "the name field has no label: the text above it isn't tied to it, and there's no placeholder or aria-label", "criteria": ["4.1.2", "3.3.2", "1.3.1"], "locators": ["guest-name", "име и фамилия", "name field", "name input"], "kind": "axe", "check": "axe:label"},
+    {"id": "E4", "page": "booking", "what": "the seat choices are divs with onclick: no role, no tabindex, not reachable or choosable by keyboard", "criteria": ["2.1.1", "4.1.2"], "locators": ["seat", ".opt", "div.opt", "места", "партер", "балкон"], "kind": "measured", "check": "measured:notReachable"},
+    {"id": "E5", "page": "booking", "what": "a 20:00 countdown auto-submits at zero, with no way to extend or turn it off", "criteria": ["2.2.1"], "locators": ["timer", "clock", "countdown", "време", "20:00"], "kind": "judgement", "check": "step with page.clock, or -"},
+    {"id": "E6", "page": "booking", "what": "a group with no choice is shown only by a red border on submit, with no text", "criteria": ["3.3.1", "1.4.1"], "locators": ["border", "unanswered", "missing", "fieldset"], "kind": "judgement", "check": "step: submit empty, no error text"},
+    {"id": "E7", "page": "booking", "what": "the viewport meta blocks zoom (maximum-scale=1, user-scalable=no)", "criteria": ["1.4.4"], "locators": ["viewport", "user-scalable", "maximum-scale", "zoom"], "kind": "axe", "check": "axe:meta-viewport"},
+    {"id": "E8", "page": "booking", "what": "the booking form is a fixed 520 px wide and scrolls sideways at 375 and 320 px", "criteria": ["1.4.10"], "locators": ["sheet", "booking-form", "overflow", "520"], "kind": "measured", "check": "measured:overflowX above 0 at 375"}
+  ]
+}

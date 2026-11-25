@@ -2,7 +2,7 @@
 title: Company overview
 owner: ceo
 status: draft
-updated: 2026-10-19
+updated: 2026-11-25
 related: [portfolio.md, strategy.md, org-chart.md, ../board/charter.md]
 ---
 
@@ -11,7 +11,7 @@ related: [portfolio.md, strategy.md, org-chart.md, ../board/charter.md]
 ## What we know
 
 - The founder acts as the Board of Directors ([charter](../board/charter.md)).
-- The company operates through Claude Code agents: a CEO (acting CMO, CSO and CPO), an analyst, and an engineering department under a CTO ([org chart](org-chart.md)).
+- The company operates through Claude Code agents: a CEO (acting CSO and CPO), an analyst, a critic and a platform engineer, an engineering department under a CTO, and optionally a marketing department under a CMO ([org chart](org-chart.md)).
 
 ## To fill in during `/onboard-company`
 
@@ -23,6 +23,10 @@ related: [portfolio.md, strategy.md, org-chart.md, ../board/charter.md]
 - TODO(board): where the company operates, and the languages it works in.
 - TODO(board): the Board's Claude plan (agents run on it, SA-002).
 - TODO(board): budget limits, monthly and per directive, for anything that costs money.
+
+## Departments and integrations
+
+- TODO(board): which are on (marketing, the Board desk, email, second opinions), from `/onboard-company`; each one's switch is in `company.json` or [the standing authorizations](../board/standing-authorizations.md).
 
 ## Working with the Board
 

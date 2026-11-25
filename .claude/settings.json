@@ -1,5 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "agent": "ceo",
+  "env": {
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "30",
+    "SECOND_OPINION_OPENAI_TIER": "flex"
+  },
   "permissions": {
     "deny": [
       "Bash(git push *--force*)",
@@ -12,22 +17,17 @@
       "Bash(git -C * push * +*)",
       "Bash(gh pr merge *--admin*)",
       "Bash(gh pr merge *--auto*)",
-      "Read(.env)",
-      "Read(.env.*)",
-      "Read(!.env.example)",
-      "Read(!.env.sample)",
-      "Read(!.env.template)",
-      "Read(*.pem)",
-      "Read(*.key)",
-      "Read(*.p12)",
-      "Read(*.pfx)",
-      "Read(id_rsa*)",
-      "Read(id_ecdsa*)",
-      "Read(id_ed25519*)",
-      "Read(~/.ssh/**)",
-      "Read(~/.aws/**)",
-      "Read(~/.config/gh/**)",
-      "Bash(gemini *)"
+      "Bash(gemini *)",
+      "mcp__claude_ai_Neon__delete_project",
+      "mcp__claude_ai_Neon__delete_branch",
+      "mcp__claude_ai_Neon__reset_from_parent",
+      "mcp__claude_ai_Neon__restore_snapshot",
+      "mcp__claude_ai_Neon__finalize_branch_restore",
+      "mcp__claude_ai_Neon__delete_snapshot",
+      "mcp__claude_ai_Neon__set_snapshot_schedule",
+      "mcp__claude_ai_Neon__delete_postgres_database",
+      "mcp__claude_ai_Neon__delete_postgres_endpoint",
+      "mcp__claude_ai_Neon__delete_postgres_role"
     ],
     "allow": [
       "Bash(python3 scripts/kb_lint.py *)",
@@ -40,6 +40,7 @@
       "Bash(gh pr list *)",
       "Bash(gh pr diff *)",
       "Bash(gh pr checks *)",
+      "Bash(gh pr create *)",
       "Bash(gh pr merge *)",
       "Bash(gh repo view *)",
       "Bash(gh run list *)",
@@ -60,19 +61,42 @@
       "Bash(npm run check *)",
       "Bash(npx eslint *)",
       "Bash(npx tsc --noEmit *)",
-      "Bash(python3 scripts/second_opinion.py *)"
+      "Bash(python3 scripts/second_opinion.py *)",
+      "mcp__claude_ai_Neon__list_projects",
+      "mcp__claude_ai_Neon__describe_project",
+      "mcp__claude_ai_Neon__list_branches",
+      "mcp__claude_ai_Neon__get_branch",
+      "mcp__claude_ai_Neon__get_default_branch",
+      "mcp__claude_ai_Neon__describe_branch",
+      "mcp__claude_ai_Neon__list_postgres_databases",
+      "mcp__claude_ai_Neon__get_database_tables",
+      "mcp__claude_ai_Neon__describe_table_schema",
+      "mcp__claude_ai_Neon__compare_database_schema",
+      "mcp__claude_ai_Neon__list_organizations",
+      "mcp__claude_ai_Neon__list_postgres_roles",
+      "mcp__claude_ai_Neon__list_snapshots",
+      "mcp__claude_ai_Neon__get_snapshot_schedule",
+      "mcp__claude_ai_Neon__list_operations",
+      "mcp__claude_ai_Neon__get_operation",
+      "mcp__claude_ai_Neon__inspect_database",
+      "mcp__claude_ai_Neon__list_docs_resources",
+      "mcp__claude_ai_Neon__get_doc_resource",
+      "mcp__claude_ai_Neon__create_branch",
+      "mcp__claude_ai_Neon__run_sql",
+      "mcp__claude_ai_Neon__run_sql_transaction"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_kb_write.py",
             "args": [],
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },
@@ -83,7 +107,44 @@
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_agent_spawn.py",
             "args": [],
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "SendMessage|TaskStop",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_agent_control.py",
+            "args": [],
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_marketing_tools.py",
+            "args": [],
+            "timeout": 60,
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Nn][Ee][Oo][Nn].*__run_sql.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_neon_sql.py",
+            "args": [],
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },
@@ -93,6 +154,66 @@
           {
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/approve_git_reads.py",
+            "args": [],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/approve_worktree_merge.py",
+            "args": [],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/approve_pr_ready.py",
+            "args": [],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_kb_write.py",
+            "args": [],
+            "timeout": 10,
+            "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_vercel_cli.py",
+            "args": [],
+            "timeout": 10,
+            "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_critic_bash.py",
+            "args": [],
+            "timeout": 10,
+            "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_marketing_tools.py",
+            "args": [],
+            "timeout": 60,
+            "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/guard_full_suite.py",
+            "args": [],
+            "timeout": 40,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*notion-query-data-sources",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/notion_approvals_sync.py",
             "args": [],
             "timeout": 10
           }

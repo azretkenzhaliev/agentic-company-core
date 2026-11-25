@@ -1,0 +1,11 @@
+{
+  "_note": "Monthly caps for paid media calls, in units per calendar month (UTC), not money. The Board sets the numbers; null means the tool refuses to run. Voice-over also needs GRANTED in voice/tts.py.",
+  "gemini_images": null,
+  "gemini_video_seconds": null,
+  "elevenlabs_stt_seconds": null,
+  "elevenlabs_tts_characters": null,
+  "_note_footage": "Per-download limits for footage/fetch.py: size in MB, length in minutes, and retries per request. Not money: downloads are free.",
+  "footage_max_mb": 500,
+  "footage_max_minutes": 30,
+  "footage_retries": 3
+}
